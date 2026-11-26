@@ -16,7 +16,7 @@ tidy_trajectories(
   obj = NULL,
   times = NULL,
   save_trajectories = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -25,7 +25,7 @@ tidy_trajectories(
 tidy_state(
   samples,
   obj = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -35,7 +35,7 @@ tidy_snapshots(
   samples,
   obj = NULL,
   times,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -68,9 +68,10 @@ tidy_snapshots(
   If the likelihood was created with `save_trajectories` as a character
   vector of variable names, that same vector.
 
-- n_draws:
+- n_samples:
 
-  Optional number of draws to keep, selected at random from all chains.
+  Optional number of samples to keep, selected at random from all
+  chains.
 
 - vars:
 
@@ -108,4 +109,4 @@ filter used to create the likelihood is needed as `obj`. Output from
 carries this information with it and `obj` can be omitted.
 
 Trajectories can be very large (variables x times x draws). Use `vars`
-and `n_draws` to reduce them before reshaping.
+and `n_samples` to reduce them before reshaping.

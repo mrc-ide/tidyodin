@@ -22,24 +22,8 @@ library(odin2)
 library(dust2)
 library(monty)
 library(ggplot2)
+library(MetBrewer)
 theme_set(theme_bw())
-```
-
-The plots use colours from the `MetBrewer` package. A sequential palette
-is used for values of a parameter, which have an order. A categorical
-palette is used for scenarios, with each keeping the same colour
-wherever it appears, and data are in black:
-
-``` r
-
-sequential <- function(n) as.character(MetBrewer::met.brewer("Hokusai2", n))
-
-egypt <- as.character(MetBrewer::met.brewer("Egypt"))
-colours <- c("data" = "black",
-             "fit" = egypt[2],
-             "projection" = egypt[3],
-             "baseline" = egypt[3],
-             "30% lower transmission" = egypt[4])
 ```
 
 ## Sensitivity analysis
@@ -115,11 +99,11 @@ traj
 
 ggplot(traj, aes(time, value, colour = beta, group = beta)) +
   geom_line() +
-  facet_wrap(~variable) +
-  scale_colour_gradientn(colours = sequential(6))
+  facet_wrap(vars(variable)) +
+  scale_colour_met_c("Hokusai2")
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-5-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-4-1.png)
 
 ### A stochastic model
 
@@ -190,12 +174,12 @@ of `beta`:
 ggplot(traj, aes(time, value, colour = factor(beta),
                  group = interaction(beta, particle))) +
   geom_line(alpha = 0.15) +
-  scale_colour_manual(values = sequential(3)) +
+  scale_colour_met_d("Hokusai2") +
   labs(y = "I", colour = "beta") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-8-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-7-1.png)
 
 [`summarise_trajectories()`](https://mrc-ide.github.io/tidyodin/reference/summarise_trajectories.md)
 summarises over particles and draws, keeping any other columns as
@@ -208,12 +192,12 @@ ggplot(summarise_trajectories(traj),
        aes(time, fill = factor(beta), colour = factor(beta))) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, colour = NA) +
   geom_line(aes(y = median)) +
-  scale_colour_manual(values = sequential(3)) +
-  scale_fill_manual(values = sequential(3)) +
+  scale_colour_met_d("Hokusai2") +
+  scale_fill_met_d("Hokusai2") +
   labs(y = "I", fill = "beta", colour = "beta")
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-9-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-8-1.png)
 
 A stochastic model can also be run without the noise, by passing
 `deterministic = TRUE`. Random draws are then replaced by their
@@ -244,15 +228,27 @@ vcv <- matrix(c(0.051, 0.040, 0.040, 0.035), 2, 2)
 sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
-#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▆▁▁] ■■■■■■■■                         |  24% ETA:  8s
-#> ⢂⠀ Sampling [█▅▁] ■■■■■■■■■■■■■■■■■                |  53% ETA:  5s
-#> ⡂⠀ Sampling [██▄] ■■■■■■■■■■■■■■■■■■■■■■■■■        |  82% ETA:  2s
-#> ✔ Sampled 9000 steps across 3 chains in 10.3s
+#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 46s
+#> ⠄⠀ Sampling [▃▁▁] ■■■■                             |  10% ETA:  8s
+#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■■                   |  42% ETA:  5s
+#> ⡂⠀ Sampling [██▂] ■■■■■■■■■■■■■■■■■■■■■■■          |  74% ETA:  2s
+#> ✔ Sampled 9000 steps across 3 chains in 9.3s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 
 fit <- tidy_trajectories(samples, filter, vars = "incidence")
+```
+
+``` r
+
+nms_variable <- c("S", "I", "R", "incidence")
+cols_variable <- met.brewer("Demuth", length(nms_variable))
+names(cols_variable) <- nms_variable
+
+nms_scenario <- c("fit", "projection", "baseline", "30% lower transmission")
+cols_scenario <- c(cols_variable["incidence"],
+                   met.brewer("Kandinsky")[c(1, 1, 2)])
+names(cols_scenario) <- nms_scenario
 ```
 
 ### Continuing a fit
@@ -280,8 +276,8 @@ both <- dplyr::bind_rows(
 ggplot(both, aes(time, value)) +
   geom_line(aes(group = interaction(sample, period), colour = period),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
-  scale_colour_manual(values = colours) +
+  geom_point(aes(y = cases), data = data) +
+  scale_colour_manual(values = cols_scenario) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
@@ -345,8 +341,7 @@ scenarios$scenario <- factor(scenarios$scenario, unique(scenarios$scenario))
 ggplot(summarise_trajectories(scenarios), aes(time, fill = scenario)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
   geom_line(aes(y = median, colour = scenario)) +
-  scale_colour_manual(values = colours) +
-  scale_fill_manual(values = colours) +
+  scale_fill_manual(values = cols_scenario, aesthetics = c("fill", "colour")) +
   labs(y = "incidence")
 ```
 
@@ -372,8 +367,8 @@ future$scenario <- factor(future$scenario, unique(future$scenario))
 ggplot(future, aes(time, value)) +
   geom_line(aes(group = interaction(sample, scenario), colour = scenario),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
-  scale_colour_manual(values = colours) +
+  geom_point(aes(y = cases), data = data) +
+  scale_colour_manual(values = cols_scenario) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```

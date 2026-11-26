@@ -24,7 +24,7 @@ run_parameter_sets(
   fixed = NULL,
   n_particles = 1,
   deterministic = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   time_start = NULL,
   save_trajectories = TRUE,
   dt = NULL,
@@ -94,7 +94,7 @@ run_parameter_sets(
   no effect on ODE models, which are always deterministic. By default
   `FALSE`, or as the fit if `generator` is a filter or unfilter.
 
-- n_draws:
+- n_samples:
 
   Optional number of parameter sets to select at random from `pars`. If
   given, the result has a single chain.

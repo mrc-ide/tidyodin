@@ -20,7 +20,7 @@ continue_parameter_sets(
   fixed = NULL,
   n_particles = NULL,
   deterministic = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   state = NULL,
   time = NULL,
   save_trajectories = NULL,
@@ -84,7 +84,7 @@ continue_parameter_sets(
   deterministically. By default this follows the fit (`TRUE` for an
   unfilter, `FALSE` for a filter) or the previous run.
 
-- n_draws:
+- n_samples:
 
   Optional number of parameter sets to select at random from `pars`. If
   given, the result has a single chain.
