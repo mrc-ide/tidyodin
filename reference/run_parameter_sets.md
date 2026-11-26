@@ -22,11 +22,10 @@ run_parameter_sets(
   times,
   packer = NULL,
   fixed = NULL,
-  modify = NULL,
   n_particles = 1,
-  deterministic = FALSE,
+  deterministic = NULL,
   n_draws = NULL,
-  time_start = 0,
+  time_start = NULL,
   save_trajectories = TRUE,
   dt = NULL,
   ode_control = NULL,
@@ -41,6 +40,10 @@ run_parameter_sets(
 
   An odin2 model generator, as returned by
   [`odin2::odin()`](https://mrc-ide.github.io/odin2/reference/odin.html).
+  When rerunning a fitted model, pass the filter or unfilter used for
+  the fit instead: the model, its time step and start time, and whether
+  it is deterministic are then taken from the fit rather than given
+  again.
 
 - pars:
 
@@ -49,7 +52,10 @@ run_parameter_sets(
   - a `monty_samples` object (requires `packer`); chains are kept
 
   - a data frame with one row per parameter set and one numeric column
-    per parameter
+    per parameter. Columns `.chain`, `.iteration` and `.draw`, as
+    produced by
+    [`posterior::as_draws_df()`](https://mc-stan.org/posterior/reference/draws_df.html),
+    are not treated as parameters, and `.chain` is used to keep chains
 
   - a list of parameter lists; without a `packer`, elements that are the
     same in every set are treated as fixed
@@ -75,12 +81,6 @@ run_parameter_sets(
   replace any fixed values in `packer`. They may not name a parameter
   that varies in `pars`.
 
-- modify:
-
-  Optional function applied to each parameter list before the model is
-  run, for example to scale a parameter for a counterfactual:
-  `function(p) { p$beta <- p$beta * 0.8; p }`.
-
 - n_particles:
 
   Number of particles (stochastic realisations) to run for each
@@ -90,7 +90,8 @@ run_parameter_sets(
 
   Logical, indicating that a stochastic model should be run
   deterministically, replacing random draws with their expectations. Has
-  no effect on ODE models, which are always deterministic.
+  no effect on ODE models, which are always deterministic. By default
+  `FALSE`, or as the fit if `generator` is a filter or unfilter.
 
 - n_draws:
 
@@ -99,14 +100,23 @@ run_parameter_sets(
 
 - time_start:
 
-  The time at which the model starts.
+  The time at which the model starts. By default 0, or as the fit if
+  `generator` is a filter or unfilter.
 
 - save_trajectories:
 
   Either `TRUE`, to save all state variables, or a character vector of
   variable names to save.
 
-- dt, ode_control, seed, n_threads:
+- dt, ode_control:
+
+  Time step for discrete-time models and control for ODE models, passed
+  to
+  [`dust2::dust_system_create()`](https://mrc-ide.github.io/dust2/reference/dust_system_create.html).
+  By default those of the fit if `generator` is a filter or unfilter,
+  and otherwise the model's defaults.
+
+- seed, n_threads:
 
   Passed to
   [`dust2::dust_system_create()`](https://mrc-ide.github.io/dust2/reference/dust_system_create.html).
@@ -147,4 +157,7 @@ set must produce a model with the same state (for example, the same
 array sizes).
 
 To compare scenarios, call this once per scenario and combine the tidied
-results with `dplyr::bind_rows(..., .id = "scenario")`.
+results with `dplyr::bind_rows(..., .id = "scenario")`. For a
+counterfactual based on a fit, convert the samples to a data frame with
+[`posterior::as_draws_df()`](https://mc-stan.org/posterior/reference/draws_df.html),
+change the parameters there, and pass the data frame as `pars`.

@@ -41,9 +41,9 @@ tidy_pars(samples, vars = NULL, dims = NULL, labels = NULL)
 
 ## Value
 
-A tibble with columns `.chain`, `.iteration`, `.draw`, `parameter`,
-index columns for array parameters, `group` for grouped parameters, and
-`value`.
+A tibble with columns `.chain`, `.iteration`, `.draw`, `parameter` (a
+factor, with levels in the order of the samples), index columns for
+array parameters, `group` for grouped parameters, and `value`.
 
 ## Details
 

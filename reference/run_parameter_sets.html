@@ -29,6 +29,10 @@ carry on from the end of a fit or of a previous run."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/tidyodin.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/parameter-sets.html">Running many parameter sets</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/mrc-ide/tidyodin/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -63,11 +67,10 @@ carry on from the end of a fit or of a previous run.</p>
 <span>  <span class="va">times</span>,</span>
 <span>  packer <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fixed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  modify <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_particles <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  deterministic <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  deterministic <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_draws <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  time_start <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  time_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dt <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ode_control <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -82,13 +85,18 @@ carry on from the end of a fit or of a previous run.</p>
 
 <dl><dt id="arg-generator">generator<a class="anchor" aria-label="anchor" href="#arg-generator"></a></dt>
 <dd><p>An odin2 model generator, as returned by
-<code><a href="https://mrc-ide.github.io/odin2/reference/odin.html" class="external-link">odin2::odin()</a></code>.</p></dd>
+<code><a href="https://mrc-ide.github.io/odin2/reference/odin.html" class="external-link">odin2::odin()</a></code>. When rerunning a fitted model, pass the filter or
+unfilter used for the fit instead: the model, its time step and
+start time, and whether it is deterministic are then taken from
+the fit rather than given again.</p></dd>
 
 
 <dt id="arg-pars">pars<a class="anchor" aria-label="anchor" href="#arg-pars"></a></dt>
 <dd><p>The parameter sets. One of:</p><ul><li><p>a <code>monty_samples</code> object (requires <code>packer</code>); chains are kept</p></li>
 <li><p>a data frame with one row per parameter set and one numeric
-column per parameter</p></li>
+column per parameter. Columns <code>.chain</code>, <code>.iteration</code> and <code>.draw</code>,
+as produced by <code><a href="https://mc-stan.org/posterior/reference/draws_df.html" class="external-link">posterior::as_draws_df()</a></code>, are not treated as
+parameters, and <code>.chain</code> is used to keep chains</p></li>
 <li><p>a list of parameter lists; without a <code>packer</code>, elements that are
 the same in every set are treated as fixed</p></li>
 <li><p>a matrix with one column per parameter set (requires <code>packer</code>)</p></li>
@@ -113,12 +121,6 @@ to every set, and replace any fixed values in <code>packer</code>. They may
 not name a parameter that varies in <code>pars</code>.</p></dd>
 
 
-<dt id="arg-modify">modify<a class="anchor" aria-label="anchor" href="#arg-modify"></a></dt>
-<dd><p>Optional function applied to each parameter list before
-the model is run, for example to scale a parameter for a
-counterfactual: <code>function(p) { p$beta &lt;- p$beta * 0.8; p }</code>.</p></dd>
-
-
 <dt id="arg-n-particles">n_particles<a class="anchor" aria-label="anchor" href="#arg-n-particles"></a></dt>
 <dd><p>Number of particles (stochastic realisations) to
 run for each parameter set.</p></dd>
@@ -128,7 +130,8 @@ run for each parameter set.</p></dd>
 <dd><p>Logical, indicating that a stochastic model
 should be run deterministically, replacing random draws with their
 expectations. Has no effect on ODE models, which are always
-deterministic.</p></dd>
+deterministic. By default <code>FALSE</code>, or as the fit if <code>generator</code> is
+a filter or unfilter.</p></dd>
 
 
 <dt id="arg-n-draws">n_draws<a class="anchor" aria-label="anchor" href="#arg-n-draws"></a></dt>
@@ -137,7 +140,8 @@ from <code>pars</code>. If given, the result has a single chain.</p></dd>
 
 
 <dt id="arg-time-start">time_start<a class="anchor" aria-label="anchor" href="#arg-time-start"></a></dt>
-<dd><p>The time at which the model starts.</p></dd>
+<dd><p>The time at which the model starts. By default
+0, or as the fit if <code>generator</code> is a filter or unfilter.</p></dd>
 
 
 <dt id="arg-save-trajectories">save_trajectories<a class="anchor" aria-label="anchor" href="#arg-save-trajectories"></a></dt>
@@ -145,9 +149,15 @@ from <code>pars</code>. If given, the result has a single chain.</p></dd>
 or a character vector of variable names to save.</p></dd>
 
 
-<dt id="arg-dt-ode-control-seed-n-threads">dt, ode_control, seed, n_threads<a class="anchor" aria-label="anchor" href="#arg-dt-ode-control-seed-n-threads"></a></dt>
-<dd><p>Passed to
-<code><a href="https://mrc-ide.github.io/dust2/reference/dust_system_create.html" class="external-link">dust2::dust_system_create()</a></code>.</p></dd>
+<dt id="arg-dt-ode-control">dt, ode_control<a class="anchor" aria-label="anchor" href="#arg-dt-ode-control"></a></dt>
+<dd><p>Time step for discrete-time models and
+control for ODE models, passed to <code><a href="https://mrc-ide.github.io/dust2/reference/dust_system_create.html" class="external-link">dust2::dust_system_create()</a></code>.
+By default those of the fit if <code>generator</code> is a filter or
+unfilter, and otherwise the model's defaults.</p></dd>
+
+
+<dt id="arg-seed-n-threads">seed, n_threads<a class="anchor" aria-label="anchor" href="#arg-seed-n-threads"></a></dt>
+<dd><p>Passed to <code><a href="https://mrc-ide.github.io/dust2/reference/dust_system_create.html" class="external-link">dust2::dust_system_create()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -174,7 +184,10 @@ parameters that produced it.</p>
 every set must produce a model with the same state (for example, the
 same array sizes).</p>
 <p>To compare scenarios, call this once per scenario and combine the
-tidied results with <code>dplyr::bind_rows(..., .id = "scenario")</code>.</p>
+tidied results with <code>dplyr::bind_rows(..., .id = "scenario")</code>. For a
+counterfactual based on a fit, convert the samples to a data frame
+with <code><a href="https://mc-stan.org/posterior/reference/draws_df.html" class="external-link">posterior::as_draws_df()</a></code>, change the parameters there, and
+pass the data frame as <code>pars</code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

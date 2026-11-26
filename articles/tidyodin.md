@@ -63,7 +63,7 @@ sim <- tidy_simulation(y, sys, t)
 sim
 #> # A tibble: 7,320 × 4
 #>    particle  time variable  value
-#>       <int> <int> <chr>     <dbl>
+#>       <int> <int> <fct>     <dbl>
 #>  1        1     0 S           990
 #>  2        1     0 I            10
 #>  3        1     0 R             0
@@ -134,7 +134,7 @@ sim_age <- tidy_simulation(y, sys, t, dims = "age",
 sim_age
 #> # A tibble: 3,660 × 5
 #>    particle  time variable age      value
-#>       <int> <int> <chr>    <fct>    <dbl>
+#>       <int> <int> <fct>    <fct>    <dbl>
 #>  1        1     0 S        children   295
 #>  2        1     0 S        adults     695
 #>  3        1     0 I        children     5
@@ -188,10 +188,11 @@ sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
 #> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▂▁▁] ■■■                              |   7% ETA:  9s
-#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■                    |  38% ETA:  6s
-#> ⡂⠀ Sampling [██▁] ■■■■■■■■■■■■■■■■■■■■■■           |  71% ETA:  3s
-#> ✔ Sampled 9000 steps across 3 chains in 9.3s
+#> ⠄⠀ Sampling [▅▁▁] ■■■■■■■                          |  20% ETA: 11s
+#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■                    |  41% ETA:  8s
+#> ⡂⠀ Sampling [█▇▁] ■■■■■■■■■■■■■■■■■■■■             |  64% ETA:  5s
+#> ⠅⠀ Sampling [██▅] ■■■■■■■■■■■■■■■■■■■■■■■■■■■      |  86% ETA:  2s
+#> ✔ Sampled 9000 steps across 3 chains in 13.4s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 ```
@@ -204,7 +205,7 @@ pars <- tidy_pars(samples)
 pars
 #> # A tibble: 2,400 × 5
 #>    .chain .iteration .draw parameter value
-#>     <int>      <int> <int> <chr>     <dbl>
+#>     <int>      <int> <int> <fct>     <dbl>
 #>  1      1          1     1 beta      0.675
 #>  2      1          1     1 gamma     0.441
 #>  3      1          2     2 beta      0.675
@@ -234,7 +235,7 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
 #> # A tibble: 24,000 × 6
 #>    .chain .iteration .draw  time variable  value
-#>     <int>      <int> <int> <int> <chr>     <dbl>
+#>     <int>      <int> <int> <int> <fct>     <dbl>
 #>  1      1          1     1     1 incidence     8
 #>  2      1          1     1     2 incidence     7
 #>  3      1          1     1     3 incidence     7
@@ -254,124 +255,9 @@ ggplot(fit, aes(time, value)) +
 
 ![](tidyodin_files/figure-html/unnamed-chunk-10-1.png)
 
-## Running the model over many parameter sets
+## Next steps
 
-[`run_parameter_sets()`](https://mrc-ide.github.io/tidyodin/reference/run_parameter_sets.md)
-runs the model from its initial conditions, once per parameter set, and
-returns an object with the same structure as `samples`. The parameter
-sets can be a data frame with one row per set. Parameters that should
-stay the same in every set go in `fixed`:
-
-``` r
-
-grid <- data.frame(beta = c(0.2, 0.3, 0.5))
-sweep <- run_parameter_sets(sir, grid, times = 0:60,
-                            fixed = list(gamma = 0.1, N = 1000),
-                            n_particles = 20, dt = 0.25)
-sweep
-#> 
-#> ── <monty_samples: 1 parameter x 3 samples x 1 chain> ──────────────────────────
-#> ℹ Parameters: 'beta'
-#> ℹ Conversion to other types is possible:
-#> → ! posterior::as_draws_array() [package installed, but not loaded]
-#> → ! posterior::as_draws_df() [package installed, but not loaded]
-#> → ✖ coda::as.mcmc.list() [package missing]
-#> ℹ These samples have associated observations
-#> ℹ See `?monty_sample()` and `vignette("samples")` for more information
-```
-
-Because the structure matches a fit, the same functions tidy it. Each
-parameter set is a draw, so parameters join to trajectories by `.draw`:
-
-``` r
-
-sweep_tidy <- dplyr::left_join(
-  tidy_trajectories(sweep, vars = "I"),
-  dplyr::select(tidy_pars(sweep), .draw, beta = value),
-  by = ".draw")
-
-ggplot(sweep_tidy, aes(time, value, group = interaction(.draw, particle),
-                       colour = factor(beta))) +
-  geom_line(alpha = 0.4) +
-  labs(colour = "beta", y = "I")
-```
-
-![](tidyodin_files/figure-html/unnamed-chunk-12-1.png)
-
-`n_particles` sets the number of stochastic realisations per parameter
-set. With `deterministic = TRUE` a stochastic model is instead run once
-per set using expectations in place of random draws:
-
-``` r
-
-sweep_det <- run_parameter_sets(sir, grid, times = 0:60,
-                                fixed = list(gamma = 0.1, N = 1000),
-                                deterministic = TRUE, dt = 0.25)
-
-ggplot(tidy_trajectories(sweep_det, vars = "I"),
-       aes(time, value, colour = factor(.draw))) +
-  geom_line() +
-  labs(colour = "parameter set", y = "I")
-```
-
-![](tidyodin_files/figure-html/unnamed-chunk-13-1.png)
-
-## Continuing from a fit
-
-[`continue_parameter_sets()`](https://mrc-ide.github.io/tidyodin/reference/continue_parameter_sets.md)
-carries on from the final state and time of a set of samples, with each
-sample continuing from its own state using its own parameters. For a fit
-this needs the filter and the packer, and the likelihood must have been
-created with `save_state = TRUE`. Here each posterior draw is projected
-forward 20 days:
-
-``` r
-
-projection <- continue_parameter_sets(samples, times = 20:40, obj = filter,
-                                      packer = packer)
-
-both <- dplyr::bind_rows(
-  fit = fit,
-  projection = tidy_trajectories(projection, vars = "incidence"),
-  .id = "period")
-
-ggplot(both, aes(time, value)) +
-  geom_line(aes(group = interaction(.draw, period), colour = period),
-            alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
-  guides(colour = guide_legend(override.aes = list(alpha = 1)))
-```
-
-![](tidyodin_files/figure-html/unnamed-chunk-14-1.png)
-
-The result of either function can itself be continued, and `n_particles`
-runs several realisations forward from each draw’s state.
-
-## Counterfactuals
-
-Posterior samples can also be passed to
-[`run_parameter_sets()`](https://mrc-ide.github.io/tidyodin/reference/run_parameter_sets.md)
-to rerun the model from the start. `modify` changes each parameter set
-before it is run. Running the baseline the same way gives a
-like-for-like comparison, since both are then unfiltered simulations:
-
-``` r
-
-baseline <- run_parameter_sets(sir, samples, times = 0:40, packer = packer,
-                               dt = 0.25)
-reduced <- run_parameter_sets(sir, samples, times = 0:40, packer = packer,
-                              modify = function(p) {
-                                p$beta <- p$beta * 0.7
-                                p
-                              }, dt = 0.25)
-scenarios <- dplyr::bind_rows(
-  baseline = tidy_trajectories(baseline, vars = "incidence"),
-  "30% lower transmission" = tidy_trajectories(reduced, vars = "incidence"),
-  .id = "scenario")
-
-ggplot(summarise_trajectories(scenarios), aes(time, fill = scenario)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
-  geom_line(aes(y = median, colour = scenario))
-```
-
-![](tidyodin_files/figure-html/unnamed-chunk-15-1.png)
+[`vignette("parameter-sets")`](https://mrc-ide.github.io/tidyodin/articles/parameter-sets.md)
+shows how to run a model over many parameter sets, for sensitivity
+analyses, projections from a fit and counterfactuals, with output in
+this same format.

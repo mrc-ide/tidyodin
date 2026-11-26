@@ -16,8 +16,8 @@ continue_parameter_sets(
   times,
   obj = NULL,
   packer = NULL,
+  pars = NULL,
   fixed = NULL,
-  modify = NULL,
   n_particles = NULL,
   deterministic = NULL,
   n_draws = NULL,
@@ -56,15 +56,20 @@ continue_parameter_sets(
   output from
   [`run_parameter_sets()`](https://mrc-ide.github.io/tidyodin/reference/run_parameter_sets.md).
 
+- pars:
+
+  Optional new parameter sets to use from this point on, in place of
+  those in `samples`, in any form accepted by
+  [`run_parameter_sets()`](https://mrc-ide.github.io/tidyodin/reference/run_parameter_sets.md).
+  There must be one for each sample, in the same order, as each still
+  continues from its own state. A data frame from
+  [`posterior::as_draws_df()`](https://mc-stan.org/posterior/reference/draws_df.html)
+  with some columns changed is the simplest way to do this.
+
 - fixed:
 
   Optional named list of parameters to hold constant from this point on,
   replacing fixed values used so far.
-
-- modify:
-
-  Optional function applied to each parameter list from this point on,
-  in addition to any applied so far.
 
 - n_particles:
 

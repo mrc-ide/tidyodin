@@ -68,8 +68,9 @@ tidy_simulation(
 ## Value
 
 A tibble with columns `group` and `particle` (where the system has
-them), `time`, `variable`, one column per array dimension (`NA` for
-variables without that dimension) and `value`.
+them), `time`, `variable` (a factor, with levels in the order the model
+stores its state), one column per array dimension (`NA` for variables
+without that dimension) and `value`.
 
 ## Details
 
