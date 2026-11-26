@@ -187,14 +187,10 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 ```
 
 ```{r}
-nms_variable <- c("S", "I", "R", "incidence")
-cols_variable <- met.brewer("Demuth", length(nms_variable))
-names(cols_variable) <- nms_variable
-
-nms_scenario <- c("fit", "projection", "baseline", "30% lower transmission")
-cols_scenario <- c(cols_variable["incidence"],
-                   met.brewer("Kandinsky")[c(1, 1, 2)])
-names(cols_scenario) <- nms_scenario
+cols <- met.brewer("Demuth", 5)
+cols_scenario <- c("fit" = cols[5], "baseline" = cols[5],
+                   "projection" =  cols[4],
+                  "30% lower transmission" = cols[1])
 ```
 
 ### Continuing a fit
@@ -286,13 +282,12 @@ future <- dplyr::bind_rows(
   .id = "scenario")
 future$scenario <- factor(future$scenario, unique(future$scenario))
 
-ggplot(future, aes(time, value)) +
-  geom_line(aes(group = interaction(sample, scenario), colour = scenario),
-            alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
-  scale_colour_manual(values = cols_scenario) +
-  labs(y = "incidence") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+ggplot(summarise_trajectories(future), aes(time, fill = scenario)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
+  geom_line(aes(y = median, colour = scenario)) +
+  geom_point(aes(time, cases), data = data, inherit.aes = FALSE) +
+  scale_fill_manual(values = cols_scenario, aesthetics = c("fill", "colour")) +
+  labs(y = "incidence")
 ```
 
 Parameters that are fixed in the packer, such as `N` here, can be changed
