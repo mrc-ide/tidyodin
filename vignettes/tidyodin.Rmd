@@ -24,16 +24,8 @@ library(odin2)
 library(dust2)
 library(monty)
 library(ggplot2)
+library(MetBrewer)
 theme_set(theme_bw())
-```
-
-The plots use colours from the `MetBrewer` package: one colour for model
-output throughout, with data in black, and a categorical palette where
-there are groups to tell apart.
-
-```{r}
-egypt <- as.character(MetBrewer::met.brewer("Egypt"))
-colours <- c(data = "black", model = egypt[2])
 ```
 
 ## A simulation
@@ -80,9 +72,14 @@ sim
 ```
 
 ```{r}
+nms_variable <- unique(sim$variable)
+cols_variable <- met.brewer("Demuth", length(nms_variable))
+names(cols_variable) <- nms_variable
+
 ggplot(sim, aes(time, value, group = particle)) +
-  geom_line(alpha = 0.3, colour = colours[["model"]]) +
-  facet_wrap(~variable, scales = "free_y")
+  geom_line(aes(colour = variable), alpha = 0.3) +
+  scale_colour_manual(values = cols_variable) +
+  facet_wrap(vars(variable), scales = "free_y")
 ```
 
 `summarise_trajectories()` collapses over particles (and draws and chains,
@@ -90,10 +87,10 @@ where present) for a ribbon plot:
 
 ```{r}
 ggplot(summarise_trajectories(sim), aes(time)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3,
-              fill = colours[["model"]]) +
-  geom_line(aes(y = median), colour = colours[["model"]]) +
-  facet_wrap(~variable, scales = "free_y")
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = variable), alpha = 0.3) +
+  geom_line(aes(y = median, colour = variable)) +
+  scale_fill_manual(values = cols_variable, aesthetics = c("fill", "colour")) +
+  facet_wrap(vars(variable), scales = "free_y")
 ```
 
 ## Array variables
@@ -131,8 +128,8 @@ sim_age
 ggplot(sim_age, aes(time, value, colour = age,
                     group = interaction(age, particle))) +
   geom_line(alpha = 0.4) +
-  facet_wrap(~variable) +
-  scale_colour_manual(values = egypt[3:4])
+  facet_wrap(vars(variable)) +
+  scale_colour_met_d("Kandinsky")
 ```
 
 ## A fit
@@ -175,9 +172,9 @@ pars <- tidy_pars(samples)
 pars
 
 ggplot(pars, aes(iteration, value, colour = factor(chain))) +
-  geom_line() +
-  facet_wrap(~parameter, scales = "free_y") +
-  scale_colour_manual(values = egypt[2:4]) +
+  geom_line(alpha = 0.5) +
+  facet_wrap(vars(parameter), scales = "free_y") +
+  scale_colour_met_d("Egypt") +
   labs(colour = "chain")
 ```
 
@@ -189,8 +186,9 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
 
 ggplot(fit, aes(time, value)) +
-  geom_line(aes(group = sample), alpha = 0.03, colour = colours[["model"]]) +
-  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  geom_line(aes(group = sample), alpha = 0.03,
+            colour = cols_variable["incidence"]) +
+  geom_point(aes(y = cases), data = data) +
   labs(y = "incidence")
 ```
 

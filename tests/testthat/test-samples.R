@@ -86,7 +86,7 @@ test_that("can subsample draws", {
                  save_snapshots = c(4, 8))
   s <- fit$samples
   set.seed(1)
-  res <- tidy_trajectories(s, fit$filter, n_draws = 7, vars = "I")
+  res <- tidy_trajectories(s, fit$filter, n_samples = 7, vars = "I")
   expect_equal(nrow(res), 7 * 10)
   expect_length(unique(res$sample), 7)
   r <- res[res$sample == res$sample[[nrow(res)]], ]

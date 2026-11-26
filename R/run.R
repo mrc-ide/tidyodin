@@ -65,7 +65,7 @@
 #'   deterministic. By default `FALSE`, or as the fit if `generator` is
 #'   a filter or unfilter.
 #'
-#' @param n_draws Optional number of parameter sets to select at random
+#' @param n_samples Optional number of parameter sets to select at random
 #'   from `pars`. If given, the result has a single chain.
 #'
 #' @param time_start The time at which the model starts. By default
@@ -97,7 +97,7 @@
 #' @export
 run_parameter_sets <- function(generator, pars, times, packer = NULL,
                                fixed = NULL, n_particles = 1,
-                               deterministic = NULL, n_draws = NULL,
+                               deterministic = NULL, n_samples = NULL,
                                time_start = NULL, save_trajectories = TRUE,
                                dt = NULL, ode_control = NULL, seed = NULL,
                                n_threads = 1) {
@@ -121,7 +121,7 @@ run_parameter_sets <- function(generator, pars, times, packer = NULL,
                deterministic = deterministic %||% FALSE)
   simulate_sets(spec, p$matrix, c(p$n_samples, p$n_chains), times,
                 state = NULL, time_start = time_start %||% 0,
-                n_particles = n_particles, n_draws = n_draws,
+                n_particles = n_particles, n_samples = n_samples,
                 save_trajectories = save_trajectories, seed = seed,
                 n_threads = n_threads)
 }
@@ -197,7 +197,7 @@ run_parameter_sets <- function(generator, pars, times, packer = NULL,
 continue_parameter_sets <- function(samples, times, obj = NULL,
                                     packer = NULL, pars = NULL,
                                     fixed = NULL, n_particles = NULL,
-                                    deterministic = NULL, n_draws = NULL,
+                                    deterministic = NULL, n_samples = NULL,
                                     state = NULL, time = NULL,
                                     save_trajectories = NULL, dt = NULL,
                                     seed = NULL, n_threads = 1) {
@@ -270,7 +270,7 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
   }
 
   simulate_sets(spec, m, shape, times, state = state, time_start = time,
-                n_particles = n_particles %||% 1, n_draws = n_draws,
+                n_particles = n_particles %||% 1, n_samples = n_samples,
                 save_trajectories = save_trajectories %||% TRUE, seed = seed,
                 n_threads = n_threads,
                 state_has_particles = n_particles_prev > 1)
@@ -284,13 +284,13 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
 ## valid if the result is thinned because parameters are always rebuilt
 ## from `pars`.
 simulate_sets <- function(spec, m, shape, times, state, time_start,
-                          n_particles, n_draws, save_trajectories, seed,
+                          n_particles, n_samples, save_trajectories, seed,
                           n_threads, state_has_particles = FALSE,
                           call = rlang::caller_env()) {
   n_total <- ncol(m)
   draws <- seq_len(n_total)
-  if (!is.null(n_draws) && n_draws < n_total) {
-    draws <- sort(sample.int(n_total, n_draws))
+  if (!is.null(n_samples) && n_samples < n_total) {
+    draws <- sort(sample.int(n_total, n_samples))
     m <- m[, draws, drop = FALSE]
     shape <- c(length(draws), 1L)
   }

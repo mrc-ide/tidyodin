@@ -200,7 +200,7 @@ test_that("can subset draws and saved variables", {
                  save_snapshots = c(4, 8))
   s <- fit$samples
   res <- run_parameter_sets(fit$filter, s, 0:5, packer = sir_packer(),
-                            n_draws = 5, save_trajectories = c("S", "R"))
+                            n_samples = 5, save_trajectories = c("S", "R"))
   expect_equal(dim(res$pars), c(2, 5, 1))
   expect_equal(dim(res$observations$trajectories), c(2, 6, 5, 1))
   expect_setequal(tidy_trajectories(res)$variable, c("S", "R"))

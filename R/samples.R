@@ -70,7 +70,7 @@ tidy_density <- function(samples) {
 #' carries this information with it and `obj` can be omitted.
 #'
 #' Trajectories can be very large (variables x times x draws). Use
-#' `vars` and `n_draws` to reduce them before reshaping.
+#' `vars` and `n_samples` to reduce them before reshaping.
 #'
 #' @param samples A `monty_samples` object, from [monty::monty_sample()]
 #'   or [run_parameter_sets()].
@@ -87,7 +87,7 @@ tidy_density <- function(samples) {
 #'   `save_trajectories` as a character vector of variable names, that
 #'   same vector.
 #'
-#' @param n_draws Optional number of draws to keep, selected at random
+#' @param n_samples Optional number of samples to keep, selected at random
 #'   from all chains.
 #'
 #' @inheritParams tidy_simulation
@@ -99,33 +99,33 @@ tidy_density <- function(samples) {
 #'
 #' @export
 tidy_trajectories <- function(samples, obj = NULL, times = NULL,
-                              save_trajectories = NULL, n_draws = NULL,
+                              save_trajectories = NULL, n_samples = NULL,
                               vars = NULL, dims = NULL, labels = NULL) {
   tidy_observation(samples, "trajectories", obj, times, save_trajectories,
-                   n_draws, vars, dims, labels)
+                   n_samples, vars, dims, labels)
 }
 
 
 #' @rdname tidy_trajectories
 #' @export
-tidy_state <- function(samples, obj = NULL, n_draws = NULL, vars = NULL,
+tidy_state <- function(samples, obj = NULL, n_samples = NULL, vars = NULL,
                        dims = NULL, labels = NULL) {
-  tidy_observation(samples, "state", obj, NULL, NULL, n_draws, vars, dims,
+  tidy_observation(samples, "state", obj, NULL, NULL, n_samples, vars, dims,
                    labels)
 }
 
 
 #' @rdname tidy_trajectories
 #' @export
-tidy_snapshots <- function(samples, obj = NULL, times, n_draws = NULL,
+tidy_snapshots <- function(samples, obj = NULL, times, n_samples = NULL,
                            vars = NULL, dims = NULL, labels = NULL) {
-  tidy_observation(samples, "snapshots", obj, times, NULL, n_draws, vars,
+  tidy_observation(samples, "snapshots", obj, times, NULL, n_samples, vars,
                    dims, labels)
 }
 
 
 tidy_observation <- function(samples, what, obj, times, save_trajectories,
-                             n_draws, vars, dims, labels,
+                             n_samples, vars, dims, labels,
                              call = rlang::caller_env()) {
   meta <- attr(samples, "tidyodin")
   samples <- check_samples(samples, call)
@@ -188,8 +188,8 @@ tidy_observation <- function(samples, what, obj, times, save_trajectories,
   n_total <- n[[1]] * n[[2]]
   lead <- utils::head(d, -2)
   draws <- seq_len(n_total)
-  if (!is.null(n_draws) && n_draws < n_total) {
-    draws <- sort(sample.int(n_total, n_draws))
+  if (!is.null(n_samples) && n_samples < n_total) {
+    draws <- sort(sample.int(n_total, n_samples))
     x <- matrix(x, prod(lead), n_total)[, draws, drop = FALSE]
   }
   dim(x) <- c(lead, length(draws))

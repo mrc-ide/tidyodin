@@ -12,7 +12,7 @@ run_parameter_sets(
   fixed = NULL,
   n_particles = 1,
   deterministic = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   time_start = NULL,
   save_trajectories = TRUE,
   dt = NULL,
@@ -63,7 +63,7 @@ expectations. Has no effect on ODE models, which are always
 deterministic. By default \code{FALSE}, or as the fit if \code{generator} is
 a filter or unfilter.}
 
-\item{n_draws}{Optional number of parameter sets to select at random
+\item{n_samples}{Optional number of parameter sets to select at random
 from \code{pars}. If given, the result has a single chain.}
 
 \item{time_start}{The time at which the model starts. By default

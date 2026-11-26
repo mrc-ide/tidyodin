@@ -85,7 +85,7 @@ test_that("grouped fits work when flattened, thinned or subsampled", {
   expect_equal(r$value, thin$observations$trajectories[2, 2, , 3, 2])
 
   set.seed(1)
-  res <- tidy_trajectories(s, fit$filter, n_draws = 6, vars = "I")
+  res <- tidy_trajectories(s, fit$filter, n_samples = 6, vars = "I")
   expect_equal(nrow(res), 2 * 10 * 6)
   r <- res[res$sample == res$sample[[1]] & res$group == "north", ]
   expect_equal(r$value,

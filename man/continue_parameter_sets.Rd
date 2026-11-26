@@ -13,7 +13,7 @@ continue_parameter_sets(
   fixed = NULL,
   n_particles = NULL,
   deterministic = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   state = NULL,
   time = NULL,
   save_trajectories = NULL,
@@ -54,7 +54,7 @@ from its own state and this must not be changed.}
 should be run deterministically. By default this follows the fit
 (\code{TRUE} for an unfilter, \code{FALSE} for a filter) or the previous run.}
 
-\item{n_draws}{Optional number of parameter sets to select at random
+\item{n_samples}{Optional number of parameter sets to select at random
 from \code{pars}. If given, the result has a single chain.}
 
 \item{state, time}{Optional state and time to continue from, instead

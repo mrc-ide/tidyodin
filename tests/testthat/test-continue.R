@@ -143,7 +143,7 @@ test_that("continue from a snapshot, and with a subset of draws", {
 
   set.seed(1)
   sub <- continue_parameter_sets(s, 10:12, obj = fit$filter,
-                                 packer = sir_packer(), n_draws = 5)
+                                 packer = sir_packer(), n_samples = 5)
   expect_equal(dim(sub$pars), c(2, 5, 1))
   i <- match(sub$pars["beta", 2, 1], matrix(s$pars, 2)[1, ])
   expect_equal(sub$observations$trajectories[1, 1, 2, 1],

@@ -11,7 +11,7 @@ tidy_trajectories(
   obj = NULL,
   times = NULL,
   save_trajectories = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -20,7 +20,7 @@ tidy_trajectories(
 tidy_state(
   samples,
   obj = NULL,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -30,7 +30,7 @@ tidy_snapshots(
   samples,
   obj = NULL,
   times,
-  n_draws = NULL,
+  n_samples = NULL,
   vars = NULL,
   dims = NULL,
   labels = NULL
@@ -52,7 +52,7 @@ from \code{obj} (the times of the data) or from the samples. For
 \code{save_trajectories} as a character vector of variable names, that
 same vector.}
 
-\item{n_draws}{Optional number of draws to keep, selected at random
+\item{n_samples}{Optional number of samples to keep, selected at random
 from all chains.}
 
 \item{vars}{Optional character vector of variables to keep, for
@@ -90,5 +90,5 @@ the likelihood is needed as \code{obj}. Output from \code{\link[=run_parameter_s
 carries this information with it and \code{obj} can be omitted.
 
 Trajectories can be very large (variables x times x draws). Use
-\code{vars} and \code{n_draws} to reduce them before reshaping.
+\code{vars} and \code{n_samples} to reduce them before reshaping.
 }
