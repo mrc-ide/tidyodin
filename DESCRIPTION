@@ -9,6 +9,8 @@ Description: Converts the arrays produced by 'dust2' simulations and
     over many parameter sets, returning an object with the same structure
     as a set of 'monty' samples.
 License: MIT + file LICENSE
+URL: https://mrc-ide.github.io/tidyodin, https://github.com/mrc-ide/tidyodin
+BugReports: https://github.com/mrc-ide/tidyodin/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -22,9 +24,13 @@ Imports:
     tibble,
     utils
 Suggests:
+    cpp11,
+    decor,
     ggplot2,
     knitr,
     odin2,
+    pkgbuild,
+    pkgload,
     posterior,
     rmarkdown,
     testthat (>= 3.0.0)

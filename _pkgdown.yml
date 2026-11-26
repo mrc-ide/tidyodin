@@ -1,0 +1,22 @@
+url: https://mrc-ide.github.io/tidyodin
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: Tidy simulations
+    desc: Output from running a dust2 system or particle filter
+    contents:
+      - tidy_simulation
+      - tidy_filter
+  - title: Tidy samples
+    desc: Output from monty, or from the functions below
+    contents:
+      - tidy_pars
+      - tidy_density
+      - tidy_trajectories
+      - summarise_trajectories
+  - title: Run many parameter sets
+    contents:
+      - run_parameter_sets
+      - continue_parameter_sets

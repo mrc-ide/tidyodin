@@ -23,7 +23,7 @@ Two functions run a model over many parameter sets and return an object with the
 
 ```r
 # install.packages("remotes")
-remotes::install_github("mrc-ide/tidy-odin-monty")
+remotes::install_github("mrc-ide/tidyodin")
 ```
 
 odin2, dust2 and monty are installed from <https://mrc-ide.r-universe.dev>.
@@ -44,4 +44,4 @@ ggplot(tidy_simulation(y, sys, t), aes(time, value, group = particle)) +
   facet_wrap(~variable, scales = "free_y")
 ```
 
-See `vignette("tidyodin")` for fits, projections and counterfactuals.
+See the [Get started](https://mrc-ide.github.io/tidyodin/articles/tidyodin.html) article, or `vignette("tidyodin")`, for fits, projections and counterfactuals.

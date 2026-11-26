@@ -8,6 +8,15 @@
 \description{
 Converts the arrays produced by 'dust2' simulations and particle filters, and the samples produced by 'monty', into long-format tibbles ready for plotting with 'ggplot2'. Also runs an 'odin2' model over many parameter sets, returning an object with the same structure as a set of 'monty' samples.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://mrc-ide.github.io/tidyodin}
+  \item \url{https://github.com/mrc-ide/tidyodin}
+  \item Report bugs at \url{https://github.com/mrc-ide/tidyodin/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: L. Whittles \email{l.whittles@imperial.ac.uk}
 
