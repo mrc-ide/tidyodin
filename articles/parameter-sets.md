@@ -228,11 +228,12 @@ vcv <- matrix(c(0.051, 0.040, 0.040, 0.035), 2, 2)
 sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
-#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 46s
-#> ⠄⠀ Sampling [▃▁▁] ■■■■                             |  10% ETA:  8s
-#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■■                   |  42% ETA:  5s
-#> ⡂⠀ Sampling [██▂] ■■■■■■■■■■■■■■■■■■■■■■■          |  74% ETA:  2s
-#> ✔ Sampled 9000 steps across 3 chains in 9.3s
+#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
+#> ⠄⠀ Sampling [▄▁▁] ■■■■■■                           |  18% ETA:  9s
+#> ⢂⠀ Sampling [█▃▁] ■■■■■■■■■■■■■■                   |  44% ETA:  7s
+#> ⡂⠀ Sampling [██▁] ■■■■■■■■■■■■■■■■■■■■■■           |  69% ETA:  4s
+#> ⠅⠀ Sampling [██▇] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   |  96% ETA:  0s
+#> ✔ Sampled 9000 steps across 3 chains in 11.6s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 
@@ -241,14 +242,10 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 
 ``` r
 
-nms_variable <- c("S", "I", "R", "incidence")
-cols_variable <- met.brewer("Demuth", length(nms_variable))
-names(cols_variable) <- nms_variable
-
-nms_scenario <- c("fit", "projection", "baseline", "30% lower transmission")
-cols_scenario <- c(cols_variable["incidence"],
-                   met.brewer("Kandinsky")[c(1, 1, 2)])
-names(cols_scenario) <- nms_scenario
+cols <- met.brewer("Demuth", 5)
+cols_scenario <- c("fit" = cols[5], "baseline" = cols[5],
+                   "projection" =  cols[4],
+                  "30% lower transmission" = cols[1])
 ```
 
 ### Continuing a fit
@@ -364,13 +361,12 @@ future <- dplyr::bind_rows(
   .id = "scenario")
 future$scenario <- factor(future$scenario, unique(future$scenario))
 
-ggplot(future, aes(time, value)) +
-  geom_line(aes(group = interaction(sample, scenario), colour = scenario),
-            alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
-  scale_colour_manual(values = cols_scenario) +
-  labs(y = "incidence") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+ggplot(summarise_trajectories(future), aes(time, fill = scenario)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
+  geom_line(aes(y = median, colour = scenario)) +
+  geom_point(aes(time, cases), data = data, inherit.aes = FALSE) +
+  scale_fill_manual(values = cols_scenario, aesthetics = c("fill", "colour")) +
+  labs(y = "incidence")
 ```
 
 ![](parameter-sets_files/figure-html/unnamed-chunk-15-1.png)
