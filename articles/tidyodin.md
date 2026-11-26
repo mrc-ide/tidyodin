@@ -13,6 +13,7 @@ library(odin2)
 library(dust2)
 library(monty)
 library(ggplot2)
+theme_set(theme_bw())
 ```
 
 ## A simulation
@@ -174,14 +175,25 @@ prior <- monty_dsl({
   beta ~ Exponential(mean = 0.5)
   gamma ~ Exponential(mean = 0.2)
 })
-sampler <- monty_sampler_random_walk(diag(c(0.002, 0.001)))
-samples <- monty_sample(likelihood + prior, sampler, 600,
-                        initial = c(0.4, 0.1), n_chains = 3)
-#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 11s
-#> ⠄⠀ Sampling [▄▁▁] ■■■■■■                           |  17% ETA:  2s
-#> ✔ Sampled 1800 steps across 3 chains in 2.2s
+```
+
+In this model `beta` and `gamma` are strongly correlated in the
+posterior, so the random walk proposal is given a matching covariance
+(taken from a short pilot run) to help the chains mix:
+
+``` r
+
+vcv <- matrix(c(0.051, 0.040, 0.040, 0.035), 2, 2)
+sampler <- monty_sampler_random_walk(vcv)
+samples <- monty_sample(likelihood + prior, sampler, 3000,
+                        initial = c(0.7, 0.45), n_chains = 3)
+#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
+#> ⠄⠀ Sampling [▂▁▁] ■■■                              |   7% ETA:  9s
+#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■                    |  38% ETA:  6s
+#> ⡂⠀ Sampling [██▁] ■■■■■■■■■■■■■■■■■■■■■■           |  71% ETA:  3s
+#> ✔ Sampled 9000 steps across 3 chains in 9.3s
 #> 
-samples <- monty_samples_thin(samples, burnin = 300, thinning_factor = 3)
+samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 ```
 
 Parameters, with chain and iteration recorded for trace plots:
@@ -190,20 +202,20 @@ Parameters, with chain and iteration recorded for trace plots:
 
 pars <- tidy_pars(samples)
 pars
-#> # A tibble: 600 × 5
+#> # A tibble: 2,400 × 5
 #>    .chain .iteration .draw parameter value
 #>     <int>      <int> <int> <chr>     <dbl>
-#>  1      1          1     1 beta      0.748
-#>  2      1          1     1 gamma     0.529
-#>  3      1          2     2 beta      0.737
-#>  4      1          2     2 gamma     0.543
-#>  5      1          3     3 beta      0.764
-#>  6      1          3     3 gamma     0.522
-#>  7      1          4     4 beta      0.722
-#>  8      1          4     4 gamma     0.500
-#>  9      1          5     5 beta      0.722
-#> 10      1          5     5 gamma     0.500
-#> # ℹ 590 more rows
+#>  1      1          1     1 beta      0.675
+#>  2      1          1     1 gamma     0.441
+#>  3      1          2     2 beta      0.675
+#>  4      1          2     2 gamma     0.441
+#>  5      1          3     3 beta      1.08 
+#>  6      1          3     3 gamma     0.818
+#>  7      1          4     4 beta      0.558
+#>  8      1          4     4 gamma     0.348
+#>  9      1          5     5 beta      0.558
+#> 10      1          5     5 gamma     0.348
+#> # ℹ 2,390 more rows
 
 ggplot(pars, aes(.iteration, value, colour = factor(.chain))) +
   geom_line() +
@@ -211,7 +223,7 @@ ggplot(pars, aes(.iteration, value, colour = factor(.chain))) +
   labs(colour = "chain")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-8-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-9-1.png)
 
 The fitted trajectories need the filter too, as the samples do not
 record the names of the state variables or the times:
@@ -220,27 +232,27 @@ record the names of the state variables or the times:
 
 fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
-#> # A tibble: 6,000 × 6
+#> # A tibble: 24,000 × 6
 #>    .chain .iteration .draw  time variable  value
 #>     <int>      <int> <int> <int> <chr>     <dbl>
-#>  1      1          1     1     1 incidence     6
-#>  2      1          1     1     2 incidence    12
-#>  3      1          1     1     3 incidence     8
-#>  4      1          1     1     4 incidence    22
-#>  5      1          1     1     5 incidence    14
-#>  6      1          1     1     6 incidence    16
-#>  7      1          1     1     7 incidence    29
-#>  8      1          1     1     8 incidence    30
+#>  1      1          1     1     1 incidence     8
+#>  2      1          1     1     2 incidence     7
+#>  3      1          1     1     3 incidence     7
+#>  4      1          1     1     4 incidence    13
+#>  5      1          1     1     5 incidence    13
+#>  6      1          1     1     6 incidence    19
+#>  7      1          1     1     7 incidence    31
+#>  8      1          1     1     8 incidence    40
 #>  9      1          1     1     9 incidence    40
-#> 10      1          1     1    10 incidence    40
-#> # ℹ 5,990 more rows
+#> 10      1          1     1    10 incidence    37
+#> # ℹ 23,990 more rows
 
 ggplot(fit, aes(time, value)) +
-  geom_line(aes(group = .draw), alpha = 0.1) +
+  geom_line(aes(group = .draw), alpha = 0.03) +
   geom_point(aes(y = cases), data = data, colour = "red")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-9-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-10-1.png)
 
 ## Running the model over many parameter sets
 
@@ -284,7 +296,7 @@ ggplot(sweep_tidy, aes(time, value, group = interaction(.draw, particle),
   labs(colour = "beta", y = "I")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-11-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-12-1.png)
 
 `n_particles` sets the number of stochastic realisations per parameter
 set. With `deterministic = TRUE` a stochastic model is instead run once
@@ -302,7 +314,7 @@ ggplot(tidy_trajectories(sweep_det, vars = "I"),
   labs(colour = "parameter set", y = "I")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-12-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-13-1.png)
 
 ## Continuing from a fit
 
@@ -325,12 +337,12 @@ both <- dplyr::bind_rows(
 
 ggplot(both, aes(time, value)) +
   geom_line(aes(group = interaction(.draw, period), colour = period),
-            alpha = 0.1) +
+            alpha = 0.03) +
   geom_point(aes(y = cases), data = data) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-13-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-14-1.png)
 
 The result of either function can itself be continued, and `n_particles`
 runs several realisations forward from each draw’s state.
@@ -362,4 +374,4 @@ ggplot(summarise_trajectories(scenarios), aes(time, fill = scenario)) +
   geom_line(aes(y = median, colour = scenario))
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-14-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-15-1.png)

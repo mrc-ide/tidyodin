@@ -69,7 +69,8 @@ y <- dust2::dust_system_simulate(sys, t)
 
 ggplot(tidy_simulation(y, sys, t), aes(time, value, group = particle)) +
   geom_line(alpha = 0.3) +
-  facet_wrap(~variable, scales = "free_y")
+  facet_wrap(~variable, scales = "free_y") +
+  theme_bw()
 ```
 
 See the [Get
