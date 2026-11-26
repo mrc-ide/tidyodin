@@ -24,6 +24,7 @@ library(odin2)
 library(dust2)
 library(monty)
 library(ggplot2)
+theme_set(theme_bw())
 ```
 
 ## A simulation
@@ -142,10 +143,18 @@ prior <- monty_dsl({
   beta ~ Exponential(mean = 0.5)
   gamma ~ Exponential(mean = 0.2)
 })
-sampler <- monty_sampler_random_walk(diag(c(0.002, 0.001)))
-samples <- monty_sample(likelihood + prior, sampler, 600,
-                        initial = c(0.4, 0.1), n_chains = 3)
-samples <- monty_samples_thin(samples, burnin = 300, thinning_factor = 3)
+```
+
+In this model `beta` and `gamma` are strongly correlated in the posterior,
+so the random walk proposal is given a matching covariance (taken from a
+short pilot run) to help the chains mix:
+
+```{r}
+vcv <- matrix(c(0.051, 0.040, 0.040, 0.035), 2, 2)
+sampler <- monty_sampler_random_walk(vcv)
+samples <- monty_sample(likelihood + prior, sampler, 3000,
+                        initial = c(0.7, 0.45), n_chains = 3)
+samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 ```
 
 Parameters, with chain and iteration recorded for trace plots:
@@ -168,7 +177,7 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
 
 ggplot(fit, aes(time, value)) +
-  geom_line(aes(group = .draw), alpha = 0.1) +
+  geom_line(aes(group = .draw), alpha = 0.03) +
   geom_point(aes(y = cases), data = data, colour = "red")
 ```
 
@@ -236,7 +245,7 @@ both <- dplyr::bind_rows(
 
 ggplot(both, aes(time, value)) +
   geom_line(aes(group = interaction(.draw, period), colour = period),
-            alpha = 0.1) +
+            alpha = 0.03) +
   geom_point(aes(y = cases), data = data) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
