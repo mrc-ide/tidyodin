@@ -187,10 +187,10 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 ```
 
 ```{r}
-cols <- met.brewer("Demuth", 5)
-cols_scenario <- c("fit" = cols[5], "baseline" = cols[4],
-                   "projection" =  cols[4],
-                  "30% lower transmission" = cols[1])
+cols <- met.brewer("Demuth", 9)
+cols_scenario <- c("fit" = cols[8], "baseline" = cols[7],
+                   "projection" =  cols[7],
+                  "30% lower transmission" = cols[5])
 ```
 
 ### Continuing a fit
