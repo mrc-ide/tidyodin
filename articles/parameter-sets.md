@@ -229,12 +229,10 @@ sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
 #> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▂▁▁] ■■■                              |   8% ETA: 12s
-#> ⢂⠀ Sampling [▇▁▁] ■■■■■■■■■■                       |  31% ETA:  9s
-#> ⡂⠀ Sampling [█▅▁] ■■■■■■■■■■■■■■■■■                |  53% ETA:  6s
-#> ⠅⠀ Sampling [██▂] ■■■■■■■■■■■■■■■■■■■■■■■          |  75% ETA:  3s
-#> ⢃⠀ Sampling [██▇] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   |  97% ETA:  0s
-#> ✔ Sampled 9000 steps across 3 chains in 13.4s
+#> ⠄⠀ Sampling [▆▁▁] ■■■■■■■■■                        |  26% ETA:  8s
+#> ⢂⠀ Sampling [█▄▁] ■■■■■■■■■■■■■■■■■                |  52% ETA:  6s
+#> ⡂⠀ Sampling [██▃] ■■■■■■■■■■■■■■■■■■■■■■■■         |  78% ETA:  3s
+#> ✔ Sampled 9000 steps across 3 chains in 11.5s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 
@@ -243,10 +241,10 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 
 ``` r
 
-cols <- met.brewer("Demuth", 5)
-cols_scenario <- c("fit" = cols[5], "baseline" = cols[4],
-                   "projection" =  cols[4],
-                  "30% lower transmission" = cols[1])
+cols <- met.brewer("Demuth", 9)
+cols_scenario <- c("fit" = cols[8], "baseline" = cols[7],
+                   "projection" =  cols[7],
+                  "30% lower transmission" = cols[5])
 ```
 
 ### Continuing a fit
