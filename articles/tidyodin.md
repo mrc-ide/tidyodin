@@ -16,6 +16,16 @@ library(ggplot2)
 theme_set(theme_bw())
 ```
 
+The plots use colours from the `MetBrewer` package: one colour for model
+output throughout, with data in black, and a categorical palette where
+there are groups to tell apart.
+
+``` r
+
+egypt <- as.character(MetBrewer::met.brewer("Egypt"))
+colours <- c(data = "black", model = egypt[2])
+```
+
 ## A simulation
 
 A stochastic SIR model that also tracks daily incidence, and can be
@@ -80,11 +90,11 @@ sim
 ``` r
 
 ggplot(sim, aes(time, value, group = particle)) +
-  geom_line(alpha = 0.3) +
+  geom_line(alpha = 0.3, colour = colours[["model"]]) +
   facet_wrap(~variable, scales = "free_y")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-4-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-5-1.png)
 
 [`summarise_trajectories()`](https://mrc-ide.github.io/tidyodin/reference/summarise_trajectories.md)
 collapses over particles (and draws and chains, where present) for a
@@ -93,12 +103,13 @@ ribbon plot:
 ``` r
 
 ggplot(summarise_trajectories(sim), aes(time)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
-  geom_line(aes(y = median)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3,
+              fill = colours[["model"]]) +
+  geom_line(aes(y = median), colour = colours[["model"]]) +
   facet_wrap(~variable, scales = "free_y")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-5-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-6-1.png)
 
 ## Array variables
 
@@ -150,10 +161,11 @@ sim_age
 ggplot(sim_age, aes(time, value, colour = age,
                     group = interaction(age, particle))) +
   geom_line(alpha = 0.4) +
-  facet_wrap(~variable)
+  facet_wrap(~variable) +
+  scale_colour_manual(values = egypt[3:4])
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-6-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-7-1.png)
 
 ## A fit
 
@@ -188,11 +200,10 @@ sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
 #> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▅▁▁] ■■■■■■■                          |  20% ETA: 11s
-#> ⢂⠀ Sampling [█▂▁] ■■■■■■■■■■■■■                    |  41% ETA:  8s
-#> ⡂⠀ Sampling [█▇▁] ■■■■■■■■■■■■■■■■■■■■             |  64% ETA:  5s
-#> ⠅⠀ Sampling [██▅] ■■■■■■■■■■■■■■■■■■■■■■■■■■■      |  86% ETA:  2s
-#> ✔ Sampled 9000 steps across 3 chains in 13.4s
+#> ⠄⠀ Sampling [▅▁▁] ■■■■■■■■                         |  23% ETA:  8s
+#> ⢂⠀ Sampling [█▄▁] ■■■■■■■■■■■■■■■■■                |  52% ETA:  5s
+#> ⡂⠀ Sampling [██▄] ■■■■■■■■■■■■■■■■■■■■■■■■■        |  81% ETA:  2s
+#> ✔ Sampled 9000 steps across 3 chains in 10.3s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 ```
@@ -204,27 +215,28 @@ Parameters, with chain and iteration recorded for trace plots:
 pars <- tidy_pars(samples)
 pars
 #> # A tibble: 2,400 × 5
-#>    .chain .iteration .draw parameter value
-#>     <int>      <int> <int> <fct>     <dbl>
-#>  1      1          1     1 beta      0.675
-#>  2      1          1     1 gamma     0.441
-#>  3      1          2     2 beta      0.675
-#>  4      1          2     2 gamma     0.441
-#>  5      1          3     3 beta      1.08 
-#>  6      1          3     3 gamma     0.818
-#>  7      1          4     4 beta      0.558
-#>  8      1          4     4 gamma     0.348
-#>  9      1          5     5 beta      0.558
-#> 10      1          5     5 gamma     0.348
+#>    chain iteration sample parameter value
+#>    <int>     <int>  <int> <fct>     <dbl>
+#>  1     1         1      1 beta      0.675
+#>  2     1         1      1 gamma     0.441
+#>  3     1         2      2 beta      0.675
+#>  4     1         2      2 gamma     0.441
+#>  5     1         3      3 beta      1.08 
+#>  6     1         3      3 gamma     0.818
+#>  7     1         4      4 beta      0.558
+#>  8     1         4      4 gamma     0.348
+#>  9     1         5      5 beta      0.558
+#> 10     1         5      5 gamma     0.348
 #> # ℹ 2,390 more rows
 
-ggplot(pars, aes(.iteration, value, colour = factor(.chain))) +
+ggplot(pars, aes(iteration, value, colour = factor(chain))) +
   geom_line() +
   facet_wrap(~parameter, scales = "free_y") +
+  scale_colour_manual(values = egypt[2:4]) +
   labs(colour = "chain")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-9-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-10-1.png)
 
 The fitted trajectories need the filter too, as the samples do not
 record the names of the state variables or the times:
@@ -234,26 +246,27 @@ record the names of the state variables or the times:
 fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
 #> # A tibble: 24,000 × 6
-#>    .chain .iteration .draw  time variable  value
-#>     <int>      <int> <int> <int> <fct>     <dbl>
-#>  1      1          1     1     1 incidence     8
-#>  2      1          1     1     2 incidence     7
-#>  3      1          1     1     3 incidence     7
-#>  4      1          1     1     4 incidence    13
-#>  5      1          1     1     5 incidence    13
-#>  6      1          1     1     6 incidence    19
-#>  7      1          1     1     7 incidence    31
-#>  8      1          1     1     8 incidence    40
-#>  9      1          1     1     9 incidence    40
-#> 10      1          1     1    10 incidence    37
+#>    chain iteration sample  time variable  value
+#>    <int>     <int>  <int> <int> <fct>     <dbl>
+#>  1     1         1      1     1 incidence     8
+#>  2     1         1      1     2 incidence     7
+#>  3     1         1      1     3 incidence     7
+#>  4     1         1      1     4 incidence    13
+#>  5     1         1      1     5 incidence    13
+#>  6     1         1      1     6 incidence    19
+#>  7     1         1      1     7 incidence    31
+#>  8     1         1      1     8 incidence    40
+#>  9     1         1      1     9 incidence    40
+#> 10     1         1      1    10 incidence    37
 #> # ℹ 23,990 more rows
 
 ggplot(fit, aes(time, value)) +
-  geom_line(aes(group = .draw), alpha = 0.03) +
-  geom_point(aes(y = cases), data = data, colour = "red")
+  geom_line(aes(group = sample), alpha = 0.03, colour = colours[["model"]]) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  labs(y = "incidence")
 ```
 
-![](tidyodin_files/figure-html/unnamed-chunk-10-1.png)
+![](tidyodin_files/figure-html/unnamed-chunk-11-1.png)
 
 ## Next steps
 

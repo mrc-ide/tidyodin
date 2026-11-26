@@ -94,9 +94,11 @@ the fit rather than given again.</p></dd>
 <dt id="arg-pars">pars<a class="anchor" aria-label="anchor" href="#arg-pars"></a></dt>
 <dd><p>The parameter sets. One of:</p><ul><li><p>a <code>monty_samples</code> object (requires <code>packer</code>); chains are kept</p></li>
 <li><p>a data frame with one row per parameter set and one numeric
-column per parameter. Columns <code>.chain</code>, <code>.iteration</code> and <code>.draw</code>,
-as produced by <code><a href="https://mc-stan.org/posterior/reference/draws_df.html" class="external-link">posterior::as_draws_df()</a></code>, are not treated as
-parameters, and <code>.chain</code> is used to keep chains</p></li>
+column per parameter. Columns identifying the sample are not
+treated as parameters: <code>.chain</code>, <code>.iteration</code> and <code>.draw</code>, as
+produced by <code><a href="https://mc-stan.org/posterior/reference/draws_df.html" class="external-link">posterior::as_draws_df()</a></code>, or <code>chain</code>, <code>iteration</code>
+and <code>sample</code>, as used in this package. The chain column is used to
+keep chains</p></li>
 <li><p>a list of parameter lists; without a <code>packer</code>, elements that are
 the same in every set are treated as fixed</p></li>
 <li><p>a matrix with one column per parameter set (requires <code>packer</code>)</p></li>

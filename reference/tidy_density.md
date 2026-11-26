@@ -19,6 +19,6 @@ tidy_density(samples)
 
 ## Value
 
-A tibble with columns `.chain`, `.iteration`, `.draw` and `density`,
+A tibble with columns `chain`, `iteration`, `sample` and `density`,
 which can be joined to the output of the other `tidy_` functions by
-`.draw`.
+`sample`.

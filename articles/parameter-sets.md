@@ -25,6 +25,23 @@ library(ggplot2)
 theme_set(theme_bw())
 ```
 
+The plots use colours from the `MetBrewer` package. A sequential palette
+is used for values of a parameter, which have an order. A categorical
+palette is used for scenarios, with each keeping the same colour
+wherever it appears, and data are in black:
+
+``` r
+
+sequential <- function(n) as.character(MetBrewer::met.brewer("Hokusai2", n))
+
+egypt <- as.character(MetBrewer::met.brewer("Egypt"))
+colours <- c("data" = "black",
+             "fit" = egypt[2],
+             "projection" = egypt[3],
+             "baseline" = egypt[3],
+             "30% lower transmission" = egypt[4])
+```
+
 ## Sensitivity analysis
 
 ### A deterministic model
@@ -69,40 +86,40 @@ res
 ```
 
 The result looks like a set of samples from `monty`, with each parameter
-set as one draw.
+set as one sample.
 [`tidy_trajectories()`](https://mrc-ide.github.io/tidyodin/reference/tidy_trajectories.md)
 and
 [`tidy_pars()`](https://mrc-ide.github.io/tidyodin/reference/tidy_pars.md)
-both identify the parameter set in `.draw`, so the two can be joined to
+both identify the parameter set in `sample`, so the two can be joined to
 label each trajectory with its value of `beta`:
 
 ``` r
 
-beta <- dplyr::select(tidy_pars(res), .draw, beta = value)
-traj <- dplyr::left_join(tidy_trajectories(res), beta, by = ".draw")
+beta <- dplyr::select(tidy_pars(res), sample, beta = value)
+traj <- dplyr::left_join(tidy_trajectories(res), beta, by = "sample")
 traj
 #> # A tibble: 2,424 × 7
-#>    .chain .iteration .draw  time variable  value  beta
-#>     <int>      <int> <int> <int> <fct>     <dbl> <dbl>
-#>  1      1          1     1     0 S        990     0.15
-#>  2      1          1     1     0 I         10     0.15
-#>  3      1          1     1     0 R          0     0.15
-#>  4      1          1     1     1 S        988.    0.15
-#>  5      1          1     1     1 I         10.5   0.15
-#>  6      1          1     1     1 R          1.02  0.15
-#>  7      1          1     1     2 S        987.    0.15
-#>  8      1          1     1     2 I         11.0   0.15
-#>  9      1          1     1     2 R          2.10  0.15
-#> 10      1          1     1     3 S        985.    0.15
+#>    chain iteration sample  time variable  value  beta
+#>    <int>     <int>  <int> <int> <fct>     <dbl> <dbl>
+#>  1     1         1      1     0 S        990     0.15
+#>  2     1         1      1     0 I         10     0.15
+#>  3     1         1      1     0 R          0     0.15
+#>  4     1         1      1     1 S        988.    0.15
+#>  5     1         1      1     1 I         10.5   0.15
+#>  6     1         1      1     1 R          1.02  0.15
+#>  7     1         1      1     2 S        987.    0.15
+#>  8     1         1      1     2 I         11.0   0.15
+#>  9     1         1      1     2 R          2.10  0.15
+#> 10     1         1      1     3 S        985.    0.15
 #> # ℹ 2,414 more rows
 
 ggplot(traj, aes(time, value, colour = beta, group = beta)) +
   geom_line() +
   facet_wrap(~variable) +
-  scale_colour_viridis_c()
+  scale_colour_gradientn(colours = sequential(6))
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-4-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-5-1.png)
 
 ### A stochastic model
 
@@ -145,23 +162,23 @@ res <- run_parameter_sets(sir, pars, times = 0:100,
                           fixed = list(gamma = 0.1), n_particles = 100,
                           dt = 0.25)
 
-beta <- dplyr::select(tidy_pars(res), .draw, beta = value)
+beta <- dplyr::select(tidy_pars(res), sample, beta = value)
 traj <- dplyr::left_join(tidy_trajectories(res, vars = "I"), beta,
-                         by = ".draw")
+                         by = "sample")
 traj
 #> # A tibble: 30,300 × 8
-#>    .chain .iteration .draw particle  time variable value  beta
-#>     <int>      <int> <int>    <int> <int> <fct>    <dbl> <dbl>
-#>  1      1          1     1        1     0 I           10   0.2
-#>  2      1          1     1        2     0 I           10   0.2
-#>  3      1          1     1        3     0 I           10   0.2
-#>  4      1          1     1        4     0 I           10   0.2
-#>  5      1          1     1        5     0 I           10   0.2
-#>  6      1          1     1        6     0 I           10   0.2
-#>  7      1          1     1        7     0 I           10   0.2
-#>  8      1          1     1        8     0 I           10   0.2
-#>  9      1          1     1        9     0 I           10   0.2
-#> 10      1          1     1       10     0 I           10   0.2
+#>    chain iteration sample particle  time variable value  beta
+#>    <int>     <int>  <int>    <int> <int> <fct>    <dbl> <dbl>
+#>  1     1         1      1        1     0 I           10   0.2
+#>  2     1         1      1        2     0 I           10   0.2
+#>  3     1         1      1        3     0 I           10   0.2
+#>  4     1         1      1        4     0 I           10   0.2
+#>  5     1         1      1        5     0 I           10   0.2
+#>  6     1         1      1        6     0 I           10   0.2
+#>  7     1         1      1        7     0 I           10   0.2
+#>  8     1         1      1        8     0 I           10   0.2
+#>  9     1         1      1        9     0 I           10   0.2
+#> 10     1         1      1       10     0 I           10   0.2
 #> # ℹ 30,290 more rows
 ```
 
@@ -173,11 +190,12 @@ of `beta`:
 ggplot(traj, aes(time, value, colour = factor(beta),
                  group = interaction(beta, particle))) +
   geom_line(alpha = 0.15) +
+  scale_colour_manual(values = sequential(3)) +
   labs(y = "I", colour = "beta") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-7-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-8-1.png)
 
 [`summarise_trajectories()`](https://mrc-ide.github.io/tidyodin/reference/summarise_trajectories.md)
 summarises over particles and draws, keeping any other columns as
@@ -190,10 +208,12 @@ ggplot(summarise_trajectories(traj),
        aes(time, fill = factor(beta), colour = factor(beta))) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, colour = NA) +
   geom_line(aes(y = median)) +
+  scale_colour_manual(values = sequential(3)) +
+  scale_fill_manual(values = sequential(3)) +
   labs(y = "I", fill = "beta", colour = "beta")
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-8-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-9-1.png)
 
 A stochastic model can also be run without the noise, by passing
 `deterministic = TRUE`. Random draws are then replaced by their
@@ -225,12 +245,10 @@ sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
 #> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▂▁▁] ■■■                              |   6% ETA: 13s
-#> ⢂⠀ Sampling [▇▁▁] ■■■■■■■■■■                       |  29% ETA:  9s
-#> ⡂⠀ Sampling [█▄▁] ■■■■■■■■■■■■■■■■                 |  51% ETA:  7s
-#> ⠅⠀ Sampling [██▂] ■■■■■■■■■■■■■■■■■■■■■■■          |  73% ETA:  4s
-#> ⢃⠀ Sampling [██▇] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   |  95% ETA:  1s
-#> ✔ Sampled 9000 steps across 3 chains in 13.5s
+#> ⠄⠀ Sampling [▆▁▁] ■■■■■■■■                         |  24% ETA:  8s
+#> ⢂⠀ Sampling [█▅▁] ■■■■■■■■■■■■■■■■■                |  53% ETA:  5s
+#> ⡂⠀ Sampling [██▄] ■■■■■■■■■■■■■■■■■■■■■■■■■        |  82% ETA:  2s
+#> ✔ Sampled 9000 steps across 3 chains in 10.3s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 
@@ -247,7 +265,7 @@ the filter, and the packer says how to turn each sample into parameters
 for the model. This needs the final state, so the likelihood must have
 been created with `save_state = TRUE`.
 
-Here each posterior draw is projected forward 20 days:
+Here each posterior sample is projected forward 20 days:
 
 ``` r
 
@@ -260,22 +278,23 @@ both <- dplyr::bind_rows(
   .id = "period")
 
 ggplot(both, aes(time, value)) +
-  geom_line(aes(group = interaction(.draw, period), colour = period),
+  geom_line(aes(group = interaction(sample, period), colour = period),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  scale_colour_manual(values = colours) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-10-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-11-1.png)
 
 The result can itself be continued, and `n_particles` runs several
-realisations forward from each draw’s state.
+realisations forward from each sample’s state.
 
 ### Counterfactuals
 
 A counterfactual reruns the model with some parameters changed. Convert
-the samples to a data frame with one row per draw, and change the
+the samples to a data frame with one row per sample, and change the
 parameters there:
 
 ``` r
@@ -321,17 +340,20 @@ scenarios <- dplyr::bind_rows(
   baseline = tidy_trajectories(baseline, vars = "incidence"),
   "30% lower transmission" = tidy_trajectories(reduced, vars = "incidence"),
   .id = "scenario")
+scenarios$scenario <- factor(scenarios$scenario, unique(scenarios$scenario))
 
 ggplot(summarise_trajectories(scenarios), aes(time, fill = scenario)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
   geom_line(aes(y = median, colour = scenario)) +
+  scale_colour_manual(values = colours) +
+  scale_fill_manual(values = colours) +
   labs(y = "incidence")
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-13-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-14-1.png)
 
 The same changed parameters can be used from the end of the fit instead,
-for an intervention that starts on day 20. Each draw still continues
+for an intervention that starts on day 20. Each sample still continues
 from its own fitted state:
 
 ``` r
@@ -341,21 +363,22 @@ intervention <- continue_parameter_sets(samples, times = 20:40, obj = filter,
 
 future <- dplyr::bind_rows(
   fit = fit,
-  "no change" = tidy_trajectories(projection, vars = "incidence"),
+  baseline = tidy_trajectories(projection, vars = "incidence"),
   "30% lower transmission" = tidy_trajectories(intervention,
                                                 vars = "incidence"),
   .id = "scenario")
 future$scenario <- factor(future$scenario, unique(future$scenario))
 
 ggplot(future, aes(time, value)) +
-  geom_line(aes(group = interaction(.draw, scenario), colour = scenario),
+  geom_line(aes(group = interaction(sample, scenario), colour = scenario),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  scale_colour_manual(values = colours) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
-![](parameter-sets_files/figure-html/unnamed-chunk-14-1.png)
+![](parameter-sets_files/figure-html/unnamed-chunk-15-1.png)
 
 Parameters that are fixed in the packer, such as `N` here, can be
 changed for a counterfactual with the `fixed` argument of either

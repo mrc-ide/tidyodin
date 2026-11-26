@@ -1,7 +1,7 @@
 # Tidy the parameters from a set of monty samples
 
 Convert the parameters in a `monty_samples` object into a long-format
-tibble with one row per parameter, draw and chain. Array parameters
+tibble with one row per parameter, sample and chain. Array parameters
 (`beta[1]`, `beta[2]`) are split into a parameter name and index
 columns, and parameters from a grouped packer (`beta<a>`) into a
 parameter name and a `group` column.
@@ -41,7 +41,7 @@ tidy_pars(samples, vars = NULL, dims = NULL, labels = NULL)
 
 ## Value
 
-A tibble with columns `.chain`, `.iteration`, `.draw`, `parameter` (a
+A tibble with columns `chain`, `iteration`, `sample`, `parameter` (a
 factor, with levels in the order of the samples), index columns for
 array parameters, `group` for grouped parameters, and `value`.
 
@@ -49,5 +49,5 @@ array parameters, `group` for grouped parameters, and `value`.
 
 For a wide format with one column per parameter, use
 [`posterior::as_draws_df()`](https://mc-stan.org/posterior/reference/draws_df.html),
-which monty supports directly. The `.chain`, `.iteration` and `.draw`
-columns here match those.
+which monty supports directly. Its `.chain`, `.iteration` and `.draw`
+columns hold the same values as `chain`, `iteration` and `sample` here.

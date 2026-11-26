@@ -94,7 +94,7 @@ tidy_snapshots(
 
 ## Value
 
-A tibble with columns `.chain`, `.iteration`, `.draw`, `group` and
+A tibble with columns `chain`, `iteration`, `sample`, `group` and
 `particle` (where present), `time` (except for `tidy_state()`),
 `variable`, one column per array dimension and `value`.
 

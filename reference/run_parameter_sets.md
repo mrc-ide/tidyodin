@@ -52,10 +52,11 @@ run_parameter_sets(
   - a `monty_samples` object (requires `packer`); chains are kept
 
   - a data frame with one row per parameter set and one numeric column
-    per parameter. Columns `.chain`, `.iteration` and `.draw`, as
-    produced by
+    per parameter. Columns identifying the sample are not treated as
+    parameters: `.chain`, `.iteration` and `.draw`, as produced by
     [`posterior::as_draws_df()`](https://mc-stan.org/posterior/reference/draws_df.html),
-    are not treated as parameters, and `.chain` is used to keep chains
+    or `chain`, `iteration` and `sample`, as used in this package. The
+    chain column is used to keep chains
 
   - a list of parameter lists; without a `packer`, elements that are the
     same in every set are treated as fixed
