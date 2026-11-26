@@ -34,6 +34,25 @@ odin2, dust2 and monty are installed from <https://mrc-ide.r-universe.dev>.
 library(tidyodin)
 library(ggplot2)
 
+# A stochastic SIR model
+sir <- odin2::odin({
+  update(S) <- S - n_SI
+  update(I) <- I + n_SI - n_IR
+  update(R) <- R + n_IR
+  p_SI <- 1 - exp(-beta * I / N * dt)
+  p_IR <- 1 - exp(-gamma * dt)
+  n_SI <- Binomial(S, p_SI)
+  n_IR <- Binomial(I, p_IR)
+  initial(S) <- N - I0
+  initial(I) <- I0
+  initial(R) <- 0
+  N <- parameter(1000)
+  I0 <- parameter(10)
+  beta <- parameter(0.4)
+  gamma <- parameter(0.1)
+})
+
+# Run 30 particles and tidy the output
 sys <- dust2::dust_system_create(sir, list(), n_particles = 30, dt = 0.25)
 dust2::dust_system_set_state_initial(sys)
 t <- 0:60
