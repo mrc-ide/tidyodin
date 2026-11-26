@@ -177,9 +177,9 @@ prior <- monty_dsl({
 sampler <- monty_sampler_random_walk(diag(c(0.002, 0.001)))
 samples <- monty_sample(likelihood + prior, sampler, 600,
                         initial = c(0.4, 0.1), n_chains = 3)
-#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 14s
-#> ⠄⠀ Sampling [█▃▁] ■■■■■■■■■■■■■■■                  |  46% ETA:  2s
-#> ✔ Sampled 1800 steps across 3 chains in 2.8s
+#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 11s
+#> ⠄⠀ Sampling [▄▁▁] ■■■■■■                           |  17% ETA:  2s
+#> ✔ Sampled 1800 steps across 3 chains in 2.2s
 #> 
 samples <- monty_samples_thin(samples, burnin = 300, thinning_factor = 3)
 ```
