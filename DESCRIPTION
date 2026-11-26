@@ -1,0 +1,37 @@
+Package: tidyodin
+Title: Tidy Output from 'odin2', 'dust2' and 'monty'
+Version: 0.1.0
+Authors@R: person("L.", "Whittles", role = c("aut", "cre"),
+                  email = "l.whittles@imperial.ac.uk")
+Description: Converts the arrays produced by 'dust2' simulations and
+    particle filters, and the samples produced by 'monty', into long-format
+    tibbles ready for plotting with 'ggplot2'. Also runs an 'odin2' model
+    over many parameter sets, returning an object with the same structure
+    as a set of 'monty' samples.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    cli,
+    dplyr,
+    dust2 (>= 0.3.9),
+    monty (>= 0.3.30),
+    rlang,
+    stats,
+    tibble,
+    utils
+Suggests:
+    ggplot2,
+    knitr,
+    odin2,
+    posterior,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Remotes:
+    mrc-ide/dust2,
+    mrc-ide/monty,
+    mrc-ide/odin2
+Additional_repositories: https://mrc-ide.r-universe.dev
+Config/testthat/edition: 3
+VignetteBuilder: knitr
