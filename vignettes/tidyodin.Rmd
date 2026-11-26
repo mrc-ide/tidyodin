@@ -27,6 +27,15 @@ library(ggplot2)
 theme_set(theme_bw())
 ```
 
+The plots use colours from the `MetBrewer` package: one colour for model
+output throughout, with data in black, and a categorical palette where
+there are groups to tell apart.
+
+```{r}
+egypt <- as.character(MetBrewer::met.brewer("Egypt"))
+colours <- c(data = "black", model = egypt[2])
+```
+
 ## A simulation
 
 A stochastic SIR model that also tracks daily incidence, and can be
@@ -72,7 +81,7 @@ sim
 
 ```{r}
 ggplot(sim, aes(time, value, group = particle)) +
-  geom_line(alpha = 0.3) +
+  geom_line(alpha = 0.3, colour = colours[["model"]]) +
   facet_wrap(~variable, scales = "free_y")
 ```
 
@@ -81,8 +90,9 @@ where present) for a ribbon plot:
 
 ```{r}
 ggplot(summarise_trajectories(sim), aes(time)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
-  geom_line(aes(y = median)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3,
+              fill = colours[["model"]]) +
+  geom_line(aes(y = median), colour = colours[["model"]]) +
   facet_wrap(~variable, scales = "free_y")
 ```
 
@@ -121,7 +131,8 @@ sim_age
 ggplot(sim_age, aes(time, value, colour = age,
                     group = interaction(age, particle))) +
   geom_line(alpha = 0.4) +
-  facet_wrap(~variable)
+  facet_wrap(~variable) +
+  scale_colour_manual(values = egypt[3:4])
 ```
 
 ## A fit
@@ -163,9 +174,10 @@ Parameters, with chain and iteration recorded for trace plots:
 pars <- tidy_pars(samples)
 pars
 
-ggplot(pars, aes(.iteration, value, colour = factor(.chain))) +
+ggplot(pars, aes(iteration, value, colour = factor(chain))) +
   geom_line() +
   facet_wrap(~parameter, scales = "free_y") +
+  scale_colour_manual(values = egypt[2:4]) +
   labs(colour = "chain")
 ```
 
@@ -177,8 +189,9 @@ fit <- tidy_trajectories(samples, filter, vars = "incidence")
 fit
 
 ggplot(fit, aes(time, value)) +
-  geom_line(aes(group = .draw), alpha = 0.03) +
-  geom_point(aes(y = cases), data = data, colour = "red")
+  geom_line(aes(group = sample), alpha = 0.03, colour = colours[["model"]]) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  labs(y = "incidence")
 ```
 
 ## Next steps

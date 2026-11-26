@@ -24,20 +24,21 @@ example \code{list(age = c("child", "adult"))}. Labelled dimensions
 become factors. Use the name \code{group} to label parameter groups.}
 }
 \value{
-A tibble with columns \code{.chain}, \code{.iteration}, \code{.draw},
+A tibble with columns \code{chain}, \code{iteration}, \code{sample},
 \code{parameter} (a factor, with levels in the order of the samples),
 index columns for array parameters, \code{group} for
 grouped parameters, and \code{value}.
 }
 \description{
 Convert the parameters in a \code{monty_samples} object into a long-format
-tibble with one row per parameter, draw and chain. Array parameters
+tibble with one row per parameter, sample and chain. Array parameters
 (\code{beta[1]}, \code{beta[2]}) are split into a parameter name and index
 columns, and parameters from a grouped packer (\verb{beta<a>}) into a
 parameter name and a \code{group} column.
 }
 \details{
 For a wide format with one column per parameter, use
-\code{\link[posterior:draws_df]{posterior::as_draws_df()}}, which monty supports directly. The
-\code{.chain}, \code{.iteration} and \code{.draw} columns here match those.
+\code{\link[posterior:draws_df]{posterior::as_draws_df()}}, which monty supports directly. Its
+\code{.chain}, \code{.iteration} and \code{.draw} columns hold the same values as
+\code{chain}, \code{iteration} and \code{sample} here.
 }

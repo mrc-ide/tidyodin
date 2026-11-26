@@ -28,6 +28,7 @@ Suggests:
     decor,
     ggplot2,
     knitr,
+    MetBrewer,
     odin2,
     pkgbuild,
     pkgload,

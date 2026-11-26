@@ -21,9 +21,9 @@ test_that("run over a list of parameter sets", {
   expect_equal(res$observations$trajectories[, , 2, 1], y)
 
   tidy <- tidy_trajectories(res)
-  expect_named(tidy, c(".chain", ".iteration", ".draw", "time", "variable",
+  expect_named(tidy, c("chain", "iteration", "sample", "time", "variable",
                        "value"))
-  expect_equal(tidy$value[tidy$variable == "I" & tidy$.draw == 2], y[2, ])
+  expect_equal(tidy$value[tidy$variable == "I" & tidy$sample == 2], y[2, ])
   expect_equal(nrow(tidy_pars(res)), 3)
   expect_equal(nrow(tidy_state(res)), 6)
 })
@@ -214,9 +214,9 @@ test_that("can run several particles per parameter set", {
   expect_equal(dim(res$observations$trajectories), c(4, 5, 7, 2, 1))
   expect_equal(dim(res$observations$state), c(4, 5, 2, 1))
   tidy <- tidy_trajectories(res)
-  expect_named(tidy, c(".chain", ".iteration", ".draw", "particle", "time",
+  expect_named(tidy, c("chain", "iteration", "sample", "particle", "time",
                        "variable", "value"))
-  r <- tidy[tidy$variable == "I" & tidy$particle == 4 & tidy$.draw == 2, ]
+  r <- tidy[tidy$variable == "I" & tidy$particle == 4 & tidy$sample == 2, ]
   expect_equal(r$value, res$observations$trajectories[2, 4, , 2, 1])
   expect_equal(res$observations$trajectories[1, , 1, , ], matrix(990, 5, 2))
   s <- summarise_trajectories(tidy)
@@ -224,4 +224,14 @@ test_that("can run several particles per parameter set", {
 
   expect_error(run_parameter_sets(model("sir"), pars, 0:6), "packer")
   expect_error(run_parameter_sets(model("sir"), 1, 0:6), "must be a")
+})
+
+test_that("sample columns from this package are not treated as parameters", {
+  pars <- data.frame(chain = rep(1:2, each = 2), iteration = rep(1:2, 2),
+                     sample = 1:4, beta = c(0.2, 0.3, 0.4, 0.5))
+  res <- run_parameter_sets(model("ode"), pars, 0:3)
+  expect_equal(rownames(res$pars), "beta")
+  expect_equal(dim(res$pars), c(1, 2, 2))
+  expect_named(tidy_trajectories(res),
+               c("chain", "iteration", "sample", "time", "variable", "value"))
 })

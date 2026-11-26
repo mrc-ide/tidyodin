@@ -1,14 +1,15 @@
 #' Tidy the parameters from a set of monty samples
 #'
 #' Convert the parameters in a `monty_samples` object into a long-format
-#' tibble with one row per parameter, draw and chain. Array parameters
+#' tibble with one row per parameter, sample and chain. Array parameters
 #' (`beta[1]`, `beta[2]`) are split into a parameter name and index
 #' columns, and parameters from a grouped packer (`beta<a>`) into a
 #' parameter name and a `group` column.
 #'
 #' For a wide format with one column per parameter, use
-#' [posterior::as_draws_df()], which monty supports directly. The
-#' `.chain`, `.iteration` and `.draw` columns here match those.
+#' [posterior::as_draws_df()], which monty supports directly. Its
+#' `.chain`, `.iteration` and `.draw` columns hold the same values as
+#' `chain`, `iteration` and `sample` here.
 #'
 #' @param samples A `monty_samples` object, from [monty::monty_sample()]
 #'   or [run_parameter_sets()].
@@ -17,7 +18,7 @@
 #'
 #' @inheritParams tidy_simulation
 #'
-#' @return A tibble with columns `.chain`, `.iteration`, `.draw`,
+#' @return A tibble with columns `chain`, `iteration`, `sample`,
 #'   `parameter` (a factor, with levels in the order of the samples),
 #'   index columns for array parameters, `group` for
 #'   grouped parameters, and `value`.
@@ -29,7 +30,7 @@ tidy_pars <- function(samples, vars = NULL, dims = NULL, labels = NULL) {
   n <- dim(x)
   dim(x) <- c(n[[1]], n[[2]] * n[[3]])
   melt_state(x, rownames(samples$pars),
-             list(.draw = seq_len(n[[2]] * n[[3]])),
+             list(sample = seq_len(n[[2]] * n[[3]])),
              vars = vars, dims = dims, labels = labels,
              name_col = "parameter", n_samples = n[[2]])
 }
@@ -39,18 +40,18 @@ tidy_pars <- function(samples, vars = NULL, dims = NULL, labels = NULL) {
 #'
 #' @inheritParams tidy_pars
 #'
-#' @return A tibble with columns `.chain`, `.iteration`, `.draw` and
+#' @return A tibble with columns `chain`, `iteration`, `sample` and
 #'   `density`, which can be joined to the output of the other `tidy_`
-#'   functions by `.draw`.
+#'   functions by `sample`.
 #'
 #' @export
 tidy_density <- function(samples) {
   samples <- check_samples(samples)
   n <- dim(samples$density)
   tibble::tibble(
-    .chain = rep(seq_len(n[[2]]), each = n[[1]]),
-    .iteration = rep(seq_len(n[[1]]), times = n[[2]]),
-    .draw = seq_len(n[[1]] * n[[2]]),
+    chain = rep(seq_len(n[[2]]), each = n[[1]]),
+    iteration = rep(seq_len(n[[1]]), times = n[[2]]),
+    sample = seq_len(n[[1]] * n[[2]]),
     density = as.vector(samples$density))
 }
 
@@ -91,7 +92,7 @@ tidy_density <- function(samples) {
 #'
 #' @inheritParams tidy_simulation
 #'
-#' @return A tibble with columns `.chain`, `.iteration`, `.draw`,
+#' @return A tibble with columns `chain`, `iteration`, `sample`,
 #'   `group` and `particle` (where present), `time` (except for
 #'   `tidy_state()`), `variable`, one column per array dimension and
 #'   `value`.
@@ -192,7 +193,7 @@ tidy_observation <- function(samples, what, obj, times, save_trajectories,
     x <- matrix(x, prod(lead), n_total)[, draws, drop = FALSE]
   }
   dim(x) <- c(lead, length(draws))
-  trailing$.draw <- draws
+  trailing$sample <- draws
 
   melt_state(x, names, trailing, vars = vars, dims = dims, labels = labels,
              n_samples = n[[1]], call = call)
@@ -237,7 +238,7 @@ summarise_trajectories <- function(data, interval = 0.95) {
   if (!is.data.frame(data) || !("value" %in% names(data))) {
     cli::cli_abort("{.arg data} must be a data frame with a {.val value} column")
   }
-  over <- c("value", ".chain", ".iteration", ".draw", "particle")
+  over <- c("value", "chain", "iteration", "sample", "particle")
   by <- setdiff(names(data), over)
   p <- (1 - interval) / 2
   dplyr::summarise(

@@ -3,10 +3,10 @@
 ## `x` is an array whose first dimension is packed state (or packed
 ## parameters), with one name per row in `names`. `trailing` describes
 ## every other dimension, in array order, as a named list of the values
-## each dimension takes. The special trailing name ".draw" is expanded
-## into `.chain`, `.iteration` and `.draw` using `n_samples`.
+## each dimension takes. The special trailing name "sample" is expanded
+## into `chain`, `iteration` and `sample` using `n_samples`.
 
-column_order <- c(".chain", ".iteration", ".draw", "group", "particle",
+column_order <- c("chain", "iteration", "sample", "group", "particle",
                   "time")
 
 melt_state <- function(x, names, trailing, vars = NULL, dims = NULL,
@@ -53,10 +53,10 @@ melt_state <- function(x, names, trailing, vars = NULL, dims = NULL,
     n_before <- n_before * length(values)
   }
 
-  if (!is.null(ret$.draw)) {
-    draw <- ret$.draw
-    ret$.chain <- (draw - 1L) %/% n_samples + 1L
-    ret$.iteration <- (draw - 1L) %% n_samples + 1L
+  if (!is.null(ret$sample)) {
+    sample <- ret$sample
+    ret$chain <- (sample - 1L) %/% n_samples + 1L
+    ret$iteration <- (sample - 1L) %% n_samples + 1L
   }
   if (!is.null(ret$group)) {
     ret$group <- apply_labels(ret$group, labels$group, "group", call)

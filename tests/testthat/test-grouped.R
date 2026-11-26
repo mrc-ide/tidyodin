@@ -5,13 +5,13 @@ test_that("tidy parameters from a grouped fit", {
   expect_equal(rownames(s$pars), c("gamma", "beta<north>", "beta<south>"))
 
   res <- tidy_pars(s)
-  expect_named(res, c(".chain", ".iteration", ".draw", "parameter", "group",
+  expect_named(res, c("chain", "iteration", "sample", "parameter", "group",
                       "value"))
   expect_equal(nrow(res), 3 * 20 * 2)
   r <- res[res$parameter == "beta" & res$group %in% "south", ]
   expect_equal(r$value, c(s$pars["beta<south>", , ]))
   r <- res[res$parameter == "beta" & res$group %in% "north" &
-             res$.chain == 2, ]
+             res$chain == 2, ]
   expect_equal(r$value, s$pars["beta<north>", , 2])
   r <- res[res$parameter == "gamma", ]
   expect_equal(r$value, c(s$pars["gamma", , ]))
@@ -30,14 +30,14 @@ test_that("tidy trajectories from a grouped fit", {
   expect_equal(dim(traj), c(4, 2, 10, 20, 2))
 
   res <- tidy_trajectories(s, fit$filter)
-  expect_named(res, c(".chain", ".iteration", ".draw", "group", "time",
+  expect_named(res, c("chain", "iteration", "sample", "group", "time",
                       "variable", "value"))
   expect_equal(nrow(res), length(traj))
   r <- res[res$variable == "incidence" & res$group == "south" &
-             res$.chain == 2 & res$.iteration == 11, ]
+             res$chain == 2 & res$iteration == 11, ]
   expect_equal(r$value, traj[4, 2, , 11, 2])
   expect_equal(r$time, 1:10)
-  expect_equal(unique(r$.draw), 31)
+  expect_equal(unique(r$sample), 31)
   r <- res[res$variable == "I" & res$group == "north" & res$time == 6, ]
   expect_equal(r$value, c(traj[2, 1, 6, , ]))
 
@@ -47,7 +47,7 @@ test_that("tidy trajectories from a grouped fit", {
   res <- tidy_trajectories(s, fit$filter, vars = "S",
                            labels = list(group = c("south", "north")))
   expect_equal(levels(res$group), c("south", "north"))
-  r <- res[res$group == "south" & res$.draw == 3, ]
+  r <- res[res$group == "south" & res$sample == 3, ]
   expect_equal(r$value, traj[1, 2, , 3, 1])
 })
 
@@ -57,16 +57,16 @@ test_that("tidy state and snapshots from a grouped fit", {
   s <- fit$samples
 
   res <- tidy_state(s, fit$filter)
-  expect_named(res, c(".chain", ".iteration", ".draw", "group", "variable",
+  expect_named(res, c("chain", "iteration", "sample", "group", "variable",
                       "value"))
-  r <- res[res$variable == "R" & res$group == "south" & res$.chain == 1, ]
+  r <- res[res$variable == "R" & res$group == "south" & res$chain == 1, ]
   expect_equal(r$value, s$observations$state[3, 2, , 1])
 
   res <- tidy_snapshots(s, fit$filter, times = c(4, 8))
-  expect_named(res, c(".chain", ".iteration", ".draw", "group", "time",
+  expect_named(res, c("chain", "iteration", "sample", "group", "time",
                       "variable", "value"))
   r <- res[res$variable == "I" & res$group == "north" & res$time == 8 &
-             res$.chain == 2, ]
+             res$chain == 2, ]
   expect_equal(r$value, s$observations$snapshots[2, 1, 2, , 2])
 })
 
@@ -81,16 +81,16 @@ test_that("grouped fits work when flattened, thinned or subsampled", {
   thin <- monty::monty_samples_thin(s, thinning_factor = 4)
   res <- tidy_trajectories(thin, fit$filter, vars = "I")
   expect_equal(nrow(res), 2 * 10 * 5 * 2)
-  r <- res[res$group == "south" & res$.chain == 2 & res$.iteration == 3, ]
+  r <- res[res$group == "south" & res$chain == 2 & res$iteration == 3, ]
   expect_equal(r$value, thin$observations$trajectories[2, 2, , 3, 2])
 
   set.seed(1)
   res <- tidy_trajectories(s, fit$filter, n_draws = 6, vars = "I")
   expect_equal(nrow(res), 2 * 10 * 6)
-  r <- res[res$.draw == res$.draw[[1]] & res$group == "north", ]
+  r <- res[res$sample == res$sample[[1]] & res$group == "north", ]
   expect_equal(r$value,
-               s$observations$trajectories[2, 1, , r$.iteration[[1]],
-                                           r$.chain[[1]]])
+               s$observations$trajectories[2, 1, , r$iteration[[1]],
+                                           r$chain[[1]]])
 
   summary <- summarise_trajectories(tidy_trajectories(s, fit$filter))
   expect_equal(nrow(summary), 2 * 10 * 4)
@@ -105,7 +105,7 @@ test_that("grouped fit saving a subset of trajectories", {
                            save_trajectories = c("I", "incidence"))
   expect_setequal(res$variable, c("I", "incidence"))
   r <- res[res$variable == "incidence" & res$group == "south" &
-             res$.draw == 25, ]
+             res$sample == 25, ]
   expect_equal(r$value, s$observations$trajectories[2, 2, , 5, 2])
 })
 

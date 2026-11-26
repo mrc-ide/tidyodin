@@ -33,6 +33,22 @@ library(ggplot2)
 theme_set(theme_bw())
 ```
 
+The plots use colours from the `MetBrewer` package. A sequential palette
+is used for values of a parameter, which have an order. A categorical
+palette is used for scenarios, with each keeping the same colour wherever
+it appears, and data are in black:
+
+```{r}
+sequential <- function(n) as.character(MetBrewer::met.brewer("Hokusai2", n))
+
+egypt <- as.character(MetBrewer::met.brewer("Egypt"))
+colours <- c("data" = "black",
+             "fit" = egypt[2],
+             "projection" = egypt[3],
+             "baseline" = egypt[3],
+             "30% lower transmission" = egypt[4])
+```
+
 ## Sensitivity analysis
 
 ### A deterministic model
@@ -66,19 +82,19 @@ res
 ```
 
 The result looks like a set of samples from `monty`, with each parameter
-set as one draw. `tidy_trajectories()` and `tidy_pars()` both identify the
-parameter set in `.draw`, so the two can be joined to label each trajectory
+set as one sample. `tidy_trajectories()` and `tidy_pars()` both identify the
+parameter set in `sample`, so the two can be joined to label each trajectory
 with its value of `beta`:
 
 ```{r}
-beta <- dplyr::select(tidy_pars(res), .draw, beta = value)
-traj <- dplyr::left_join(tidy_trajectories(res), beta, by = ".draw")
+beta <- dplyr::select(tidy_pars(res), sample, beta = value)
+traj <- dplyr::left_join(tidy_trajectories(res), beta, by = "sample")
 traj
 
 ggplot(traj, aes(time, value, colour = beta, group = beta)) +
   geom_line() +
   facet_wrap(~variable) +
-  scale_colour_viridis_c()
+  scale_colour_gradientn(colours = sequential(6))
 ```
 
 ### A stochastic model
@@ -120,9 +136,9 @@ res <- run_parameter_sets(sir, pars, times = 0:100,
                           fixed = list(gamma = 0.1), n_particles = 100,
                           dt = 0.25)
 
-beta <- dplyr::select(tidy_pars(res), .draw, beta = value)
+beta <- dplyr::select(tidy_pars(res), sample, beta = value)
 traj <- dplyr::left_join(tidy_trajectories(res, vars = "I"), beta,
-                         by = ".draw")
+                         by = "sample")
 traj
 ```
 
@@ -133,6 +149,7 @@ There is now a `particle` column, with 100 realisations for each value of
 ggplot(traj, aes(time, value, colour = factor(beta),
                  group = interaction(beta, particle))) +
   geom_line(alpha = 0.15) +
+  scale_colour_manual(values = sequential(3)) +
   labs(y = "I", colour = "beta") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
@@ -146,6 +163,8 @@ ggplot(summarise_trajectories(traj),
        aes(time, fill = factor(beta), colour = factor(beta))) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, colour = NA) +
   geom_line(aes(y = median)) +
+  scale_colour_manual(values = sequential(3)) +
+  scale_fill_manual(values = sequential(3)) +
   labs(y = "I", fill = "beta", colour = "beta")
 ```
 
@@ -191,7 +210,7 @@ point are taken from the filter, and the packer says how to turn each
 sample into parameters for the model. This needs the final state, so the
 likelihood must have been created with `save_state = TRUE`.
 
-Here each posterior draw is projected forward 20 days:
+Here each posterior sample is projected forward 20 days:
 
 ```{r}
 projection <- continue_parameter_sets(samples, times = 20:40, obj = filter,
@@ -203,20 +222,21 @@ both <- dplyr::bind_rows(
   .id = "period")
 
 ggplot(both, aes(time, value)) +
-  geom_line(aes(group = interaction(.draw, period), colour = period),
+  geom_line(aes(group = interaction(sample, period), colour = period),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  scale_colour_manual(values = colours) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```
 
 The result can itself be continued, and `n_particles` runs several
-realisations forward from each draw's state.
+realisations forward from each sample's state.
 
 ### Counterfactuals
 
 A counterfactual reruns the model with some parameters changed. Convert
-the samples to a data frame with one row per draw, and change the
+the samples to a data frame with one row per sample, and change the
 parameters there:
 
 ```{r}
@@ -245,15 +265,18 @@ scenarios <- dplyr::bind_rows(
   baseline = tidy_trajectories(baseline, vars = "incidence"),
   "30% lower transmission" = tidy_trajectories(reduced, vars = "incidence"),
   .id = "scenario")
+scenarios$scenario <- factor(scenarios$scenario, unique(scenarios$scenario))
 
 ggplot(summarise_trajectories(scenarios), aes(time, fill = scenario)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
   geom_line(aes(y = median, colour = scenario)) +
+  scale_colour_manual(values = colours) +
+  scale_fill_manual(values = colours) +
   labs(y = "incidence")
 ```
 
 The same changed parameters can be used from the end of the fit instead,
-for an intervention that starts on day 20. Each draw still continues from
+for an intervention that starts on day 20. Each sample still continues from
 its own fitted state:
 
 ```{r}
@@ -262,16 +285,17 @@ intervention <- continue_parameter_sets(samples, times = 20:40, obj = filter,
 
 future <- dplyr::bind_rows(
   fit = fit,
-  "no change" = tidy_trajectories(projection, vars = "incidence"),
+  baseline = tidy_trajectories(projection, vars = "incidence"),
   "30% lower transmission" = tidy_trajectories(intervention,
                                                 vars = "incidence"),
   .id = "scenario")
 future$scenario <- factor(future$scenario, unique(future$scenario))
 
 ggplot(future, aes(time, value)) +
-  geom_line(aes(group = interaction(.draw, scenario), colour = scenario),
+  geom_line(aes(group = interaction(sample, scenario), colour = scenario),
             alpha = 0.03) +
-  geom_point(aes(y = cases), data = data) +
+  geom_point(aes(y = cases), data = data, colour = colours[["data"]]) +
+  scale_colour_manual(values = colours) +
   labs(y = "incidence") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
 ```

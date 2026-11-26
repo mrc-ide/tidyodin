@@ -11,9 +11,9 @@ tidy_density(samples)
 or \code{\link[=run_parameter_sets]{run_parameter_sets()}}.}
 }
 \value{
-A tibble with columns \code{.chain}, \code{.iteration}, \code{.draw} and
+A tibble with columns \code{chain}, \code{iteration}, \code{sample} and
 \code{density}, which can be joined to the output of the other \code{tidy_}
-functions by \code{.draw}.
+functions by \code{sample}.
 }
 \description{
 Tidy the log density from a set of monty samples

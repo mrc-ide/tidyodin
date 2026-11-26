@@ -71,7 +71,7 @@ example \code{list(age = c("child", "adult"))}. Labelled dimensions
 become factors. Use the name \code{group} to label parameter groups.}
 }
 \value{
-A tibble with columns \code{.chain}, \code{.iteration}, \code{.draw},
+A tibble with columns \code{chain}, \code{iteration}, \code{sample},
 \code{group} and \code{particle} (where present), \code{time} (except for
 \code{tidy_state()}), \code{variable}, one column per array dimension and
 \code{value}.

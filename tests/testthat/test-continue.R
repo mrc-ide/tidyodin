@@ -54,7 +54,7 @@ test_that("can change parameters when continuing", {
   expect_equal(dim(res$pars), dim(s$pars))
   expect_true(all(res$pars["beta", , ] == 0))
   expect_equal(res$pars["gamma", , ], s$pars["gamma", , ])
-  ## no new infections, each draw starting from its own state
+  ## no new infections, each sample starting from its own state
   expect_true(all(res$observations$trajectories[4, -1, , ] == 0))
   expect_equal(res$observations$trajectories[1, 6, , ],
                s$observations$state[1, , ])
@@ -89,7 +89,7 @@ test_that("continuing with particles", {
   expect_equal(again$observations$trajectories[1:3, , 1, , 1],
                many$observations$state[1:3, , , 1])
   expect_named(tidy_trajectories(again),
-               c(".chain", ".iteration", ".draw", "particle", "time",
+               c("chain", "iteration", "sample", "particle", "time",
                  "variable", "value"))
   expect_error(continue_parameter_sets(many, 8:10, n_particles = 2),
                "can't be changed")

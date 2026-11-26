@@ -35,9 +35,11 @@
 #'
 #'   * a `monty_samples` object (requires `packer`); chains are kept
 #'   * a data frame with one row per parameter set and one numeric
-#'     column per parameter. Columns `.chain`, `.iteration` and `.draw`,
-#'     as produced by [posterior::as_draws_df()], are not treated as
-#'     parameters, and `.chain` is used to keep chains
+#'     column per parameter. Columns identifying the sample are not
+#'     treated as parameters: `.chain`, `.iteration` and `.draw`, as
+#'     produced by [posterior::as_draws_df()], or `chain`, `iteration`
+#'     and `sample`, as used in this package. The chain column is used to
+#'     keep chains
 #'   * a list of parameter lists; without a `packer`, elements that are
 #'     the same in every set are treated as fixed
 #'   * a matrix with one column per parameter set (requires `packer`)
@@ -399,9 +401,9 @@ prepare_pars <- function(pars, packer, call = rlang::caller_env()) {
     if (nrow(pars) == 0) {
       cli::cli_abort("{.arg pars} has no rows", call = call)
     }
-    n_chains <- chains_from_draws(pars$.chain)
+    n_chains <- chains_from_draws(pars$.chain %||% pars$chain)
     pars <- as.data.frame(pars)
-    pars <- pars[setdiff(names(pars), c(".chain", ".iteration", ".draw"))]
+    pars <- pars[setdiff(names(pars), draw_columns)]
     if (is.null(packer)) {
       ok <- vapply(pars, is.numeric, TRUE)
       if (!all(ok)) {
@@ -537,7 +539,11 @@ check_fixed <- function(fixed, m, call = rlang::caller_env()) {
 }
 
 
-## Recover the number of chains from the `.chain` column of a draws
+draw_columns <- c(".chain", ".iteration", ".draw", "chain", "iteration",
+                  "sample")
+
+
+## Recover the number of chains from the chain column of a draws
 ## data frame, if draws are ordered by chain with the same number in
 ## each, as posterior::as_draws_df produces. Otherwise use one chain.
 chains_from_draws <- function(chain) {

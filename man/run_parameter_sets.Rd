@@ -32,9 +32,11 @@ the fit rather than given again.}
 \itemize{
 \item a \code{monty_samples} object (requires \code{packer}); chains are kept
 \item a data frame with one row per parameter set and one numeric
-column per parameter. Columns \code{.chain}, \code{.iteration} and \code{.draw},
-as produced by \code{\link[posterior:draws_df]{posterior::as_draws_df()}}, are not treated as
-parameters, and \code{.chain} is used to keep chains
+column per parameter. Columns identifying the sample are not
+treated as parameters: \code{.chain}, \code{.iteration} and \code{.draw}, as
+produced by \code{\link[posterior:draws_df]{posterior::as_draws_df()}}, or \code{chain}, \code{iteration}
+and \code{sample}, as used in this package. The chain column is used to
+keep chains
 \item a list of parameter lists; without a \code{packer}, elements that are
 the same in every set are treated as fixed
 \item a matrix with one column per parameter set (requires \code{packer})
