@@ -64,4 +64,7 @@ ggplot(tidy_simulation(y, sys, t), aes(time, value, group = particle)) +
   theme_bw()
 ```
 
-See the [Get started](https://mrc-ide.github.io/tidyodin/articles/tidyodin.html) article, or `vignette("tidyodin")`, for fits, projections and counterfactuals.
+See the articles for more:
+
+- [Get started](https://mrc-ide.github.io/tidyodin/articles/tidyodin.html): tidying simulations, array variables and fits
+- [Running many parameter sets](https://mrc-ide.github.io/tidyodin/articles/parameter-sets.html): sensitivity analyses, projections from a fit and counterfactuals

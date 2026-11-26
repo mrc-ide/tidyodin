@@ -147,27 +147,64 @@ test_that("stochastic models can be run deterministically", {
   expect_true(all(s$observations$trajectories %% 1 == 0))
 })
 
-test_that("can modify and subset", {
+test_that("can rerun a fit with changed parameters", {
+  skip_if_not_installed("posterior")
   fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
                  save_snapshots = c(4, 8))
   s <- fit$samples
-  none <- run_parameter_sets(model("sir"), s, 0:5, packer = sir_packer(),
-                             modify = function(p) {
-                               p$beta <- 0
-                               p
-                             }, dt = 0.25)
+  pars <- posterior::as_draws_df(s)
+  pars$beta <- 0
+  none <- run_parameter_sets(fit$filter, pars, 0:5, packer = sir_packer())
   expect_true(all(none$observations$trajectories[4, , , ] == 0))
-  expect_equal(none$pars, s$pars)
+  ## chains are kept, and parameters are as supplied
+  expect_equal(dim(none$pars), dim(s$pars))
+  expect_equal(none$pars["gamma", , ], s$pars["gamma", , ])
+  expect_true(all(none$pars["beta", , ] == 0))
 
-  res <- run_parameter_sets(model("sir"), s, 0:5, packer = sir_packer(),
-                            n_draws = 5, dt = 0.25,
-                            save_trajectories = c("S", "R"))
+  ## without a packer, other parameters come from fixed
+  none2 <- run_parameter_sets(fit$filter, pars, 0:5,
+                              fixed = list(N = 1000, I0 = 10), seed = 1)
+  expect_equal(rownames(none2$pars), c("beta", "gamma"))
+  expect_equal(dim(none2$pars), dim(s$pars))
+
+  ## draws that are not whole chains become a single chain
+  sub <- run_parameter_sets(fit$filter, pars[c(1, 40, 41), ], 0:5,
+                            packer = sir_packer())
+  expect_equal(dim(sub$pars), c(2, 3, 1))
+})
+
+test_that("model settings are taken from a filter", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  s <- fit$samples
+  a <- run_parameter_sets(fit$filter, s, 0:10, packer = sir_packer(),
+                          seed = 1)
+  b <- run_parameter_sets(model("sir"), s, 0:10, packer = sir_packer(),
+                          dt = 0.25, seed = 1)
+  expect_equal(a$observations, b$observations)
+  expect_equal(attr(a, "tidyodin")$spec$dt, 0.25)
+  ## and can be overridden
+  d <- run_parameter_sets(fit$filter, s, 0:10, packer = sir_packer(),
+                          dt = 1, deterministic = TRUE)
+  expect_equal(attr(d, "tidyodin")$spec$dt, 1)
+  expect_false(all(d$observations$trajectories %% 1 == 0))
+
+  grouped <- sir_fit_grouped(save_trajectories = TRUE, save_state = TRUE,
+                             save_snapshots = c(4, 8))
+  expect_error(run_parameter_sets(grouped$filter, list(list()), 0:5),
+               "grouped fit is not supported")
+})
+
+test_that("can subset draws and saved variables", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  s <- fit$samples
+  res <- run_parameter_sets(fit$filter, s, 0:5, packer = sir_packer(),
+                            n_draws = 5, save_trajectories = c("S", "R"))
   expect_equal(dim(res$pars), c(2, 5, 1))
   expect_equal(dim(res$observations$trajectories), c(2, 6, 5, 1))
   expect_setequal(tidy_trajectories(res)$variable, c("S", "R"))
   expect_setequal(tidy_state(res)$variable, c("S", "I", "R", "incidence"))
-  expect_error(run_parameter_sets(model("sir"), s, 0:5, packer = sir_packer(),
-                                  modify = 1), "must be a function")
 })
 
 test_that("can run several particles per parameter set", {

@@ -20,16 +20,24 @@
 #' same array sizes).
 #'
 #' To compare scenarios, call this once per scenario and combine the
-#' tidied results with `dplyr::bind_rows(..., .id = "scenario")`.
+#' tidied results with `dplyr::bind_rows(..., .id = "scenario")`. For a
+#' counterfactual based on a fit, convert the samples to a data frame
+#' with [posterior::as_draws_df()], change the parameters there, and
+#' pass the data frame as `pars`.
 #'
 #' @param generator An odin2 model generator, as returned by
-#'   [odin2::odin()].
+#'   [odin2::odin()]. When rerunning a fitted model, pass the filter or
+#'   unfilter used for the fit instead: the model, its time step and
+#'   start time, and whether it is deterministic are then taken from
+#'   the fit rather than given again.
 #'
 #' @param pars The parameter sets. One of:
 #'
 #'   * a `monty_samples` object (requires `packer`); chains are kept
 #'   * a data frame with one row per parameter set and one numeric
-#'     column per parameter
+#'     column per parameter. Columns `.chain`, `.iteration` and `.draw`,
+#'     as produced by [posterior::as_draws_df()], are not treated as
+#'     parameters, and `.chain` is used to keep chains
 #'   * a list of parameter lists; without a `packer`, elements that are
 #'     the same in every set are treated as fixed
 #'   * a matrix with one column per parameter set (requires `packer`)
@@ -46,28 +54,30 @@
 #'   to every set, and replace any fixed values in `packer`. They may
 #'   not name a parameter that varies in `pars`.
 #'
-#' @param modify Optional function applied to each parameter list before
-#'   the model is run, for example to scale a parameter for a
-#'   counterfactual: `function(p) { p$beta <- p$beta * 0.8; p }`.
-#'
 #' @param n_particles Number of particles (stochastic realisations) to
 #'   run for each parameter set.
 #'
 #' @param deterministic Logical, indicating that a stochastic model
 #'   should be run deterministically, replacing random draws with their
 #'   expectations. Has no effect on ODE models, which are always
-#'   deterministic.
+#'   deterministic. By default `FALSE`, or as the fit if `generator` is
+#'   a filter or unfilter.
 #'
 #' @param n_draws Optional number of parameter sets to select at random
 #'   from `pars`. If given, the result has a single chain.
 #'
-#' @param time_start The time at which the model starts.
+#' @param time_start The time at which the model starts. By default
+#'   0, or as the fit if `generator` is a filter or unfilter.
 #'
 #' @param save_trajectories Either `TRUE`, to save all state variables,
 #'   or a character vector of variable names to save.
 #'
-#' @param dt,ode_control,seed,n_threads Passed to
-#'   [dust2::dust_system_create()].
+#' @param dt,ode_control Time step for discrete-time models and
+#'   control for ODE models, passed to [dust2::dust_system_create()].
+#'   By default those of the fit if `generator` is a filter or
+#'   unfilter, and otherwise the model's defaults.
+#'
+#' @param seed,n_threads Passed to [dust2::dust_system_create()].
 #'
 #' @return An object of class `monty_samples`, with elements:
 #'
@@ -84,21 +94,31 @@
 #'
 #' @export
 run_parameter_sets <- function(generator, pars, times, packer = NULL,
-                               fixed = NULL, modify = NULL, n_particles = 1,
-                               deterministic = FALSE, n_draws = NULL,
-                               time_start = 0, save_trajectories = TRUE,
+                               fixed = NULL, n_particles = 1,
+                               deterministic = NULL, n_draws = NULL,
+                               time_start = NULL, save_trajectories = TRUE,
                                dt = NULL, ode_control = NULL, seed = NULL,
                                n_threads = 1) {
+  if (inherits(generator, "dust_likelihood")) {
+    obj <- generator
+    if (isTRUE(obj$preserve_group_dimension)) {
+      cli::cli_abort("Rerunning a grouped fit is not supported")
+    }
+    generator <- obj$generator
+    dt <- dt %||% obj$time_control$dt
+    ode_control <- ode_control %||% obj$time_control$ode_control
+    deterministic <- deterministic %||% obj$deterministic
+    time_start <- time_start %||% obj$inputs$time_start
+  }
   p <- prepare_pars(pars, packer)
   spec <- list(generator = generator,
                packer = p$packer,
                fixed = c(p$fixed, check_fixed(fixed, p$matrix)),
-               modify = check_modify(modify),
                dt = dt,
                ode_control = ode_control,
-               deterministic = deterministic)
+               deterministic = deterministic %||% FALSE)
   simulate_sets(spec, p$matrix, c(p$n_samples, p$n_chains), times,
-                state = NULL, time_start = time_start,
+                state = NULL, time_start = time_start %||% 0,
                 n_particles = n_particles, n_draws = n_draws,
                 save_trajectories = save_trajectories, seed = seed,
                 n_threads = n_threads)
@@ -134,11 +154,15 @@ run_parameter_sets <- function(generator, pars, times, packer = NULL,
 #' @param packer For a fit, the packer the likelihood was created with.
 #'   Not needed for output from [run_parameter_sets()].
 #'
+#' @param pars Optional new parameter sets to use from this point on,
+#'   in place of those in `samples`, in any form accepted by
+#'   [run_parameter_sets()]. There must be one for each sample, in the
+#'   same order, as each still continues from its own state. A data
+#'   frame from [posterior::as_draws_df()] with some columns changed is
+#'   the simplest way to do this.
+#'
 #' @param fixed Optional named list of parameters to hold constant from
 #'   this point on, replacing fixed values used so far.
-#'
-#' @param modify Optional function applied to each parameter list from
-#'   this point on, in addition to any applied so far.
 #'
 #' @param n_particles Number of particles to run for each parameter
 #'   set, each starting from that set's final state. If the samples
@@ -169,8 +193,8 @@ run_parameter_sets <- function(generator, pars, times, packer = NULL,
 #'
 #' @export
 continue_parameter_sets <- function(samples, times, obj = NULL,
-                                    packer = NULL, fixed = NULL,
-                                    modify = NULL, n_particles = NULL,
+                                    packer = NULL, pars = NULL,
+                                    fixed = NULL, n_particles = NULL,
                                     deterministic = NULL, n_draws = NULL,
                                     state = NULL, time = NULL,
                                     save_trajectories = NULL, dt = NULL,
@@ -200,7 +224,6 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
     spec <- list(generator = obj$generator,
                  packer = packer,
                  fixed = NULL,
-                 modify = list(),
                  dt = obj$time_control$dt,
                  ode_control = obj$time_control$ode_control,
                  deterministic = obj$deterministic)
@@ -213,9 +236,18 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
     n_particles_prev <- if (is.null(state)) meta$n_particles else 1
   }
 
+  if (!is.null(pars)) {
+    new <- prepare_pars(pars, spec$packer)$matrix
+    if (!identical(dim(new), dim(m))) {
+      cli::cli_abort(
+        c("{.arg pars} must have one parameter set for each sample",
+          x = "Expected {ncol(m)} set{?s} of {nrow(m)} parameter{?s}",
+          x = "Found {ncol(new)} set{?s} of {nrow(new)} parameter{?s}"))
+    }
+    m <- new
+  }
   spec$fixed <- utils::modifyList(as.list(spec$fixed),
                                   as.list(check_fixed(fixed, m)))
-  spec$modify <- c(spec$modify, check_modify(modify))
   spec$dt <- dt %||% spec$dt
   spec$deterministic <- deterministic %||% spec$deterministic
 
@@ -264,11 +296,7 @@ simulate_sets <- function(spec, m, shape, times, state, time_start,
 
   pars_list <- lapply(seq_len(n_groups), function(i) {
     p <- if (is.null(spec$packer)) list() else spec$packer$unpack(unname(m[, i]))
-    p <- utils::modifyList(p, as.list(spec$fixed))
-    for (f in spec$modify) {
-      p <- f(p)
-    }
-    p
+    utils::modifyList(p, as.list(spec$fixed))
   })
 
   sys <- dust2::dust_system_create(
@@ -371,6 +399,9 @@ prepare_pars <- function(pars, packer, call = rlang::caller_env()) {
     if (nrow(pars) == 0) {
       cli::cli_abort("{.arg pars} has no rows", call = call)
     }
+    n_chains <- chains_from_draws(pars$.chain)
+    pars <- as.data.frame(pars)
+    pars <- pars[setdiff(names(pars), c(".chain", ".iteration", ".draw"))]
     if (is.null(packer)) {
       ok <- vapply(pars, is.numeric, TRUE)
       if (!all(ok)) {
@@ -499,19 +530,25 @@ check_fixed <- function(fixed, m, call = rlang::caller_env()) {
   if (length(clash) > 0) {
     cli::cli_abort(
       c("{.arg fixed} names parameters that vary in {.arg pars}: {.val {clash}}",
-        i = "Remove them from one or the other, or use {.arg modify}"),
+        i = "Remove them from one or the other"),
       call = call)
   }
   fixed
 }
 
 
-check_modify <- function(modify, call = rlang::caller_env()) {
-  if (is.null(modify)) {
-    return(list())
+## Recover the number of chains from the `.chain` column of a draws
+## data frame, if draws are ordered by chain with the same number in
+## each, as posterior::as_draws_df produces. Otherwise use one chain.
+chains_from_draws <- function(chain) {
+  if (is.null(chain)) {
+    return(1L)
   }
-  if (!is.function(modify)) {
-    cli::cli_abort("{.arg modify} must be a function", call = call)
+  n <- length(unique(chain))
+  expected <- rep(seq_len(n), each = length(chain) %/% n)
+  if (length(chain) %% n == 0 && identical(as.integer(chain), expected)) {
+    n
+  } else {
+    1L
   }
-  list(modify)
 }

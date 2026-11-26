@@ -42,7 +42,8 @@ become factors. Use the name \code{group} to label parameter groups.}
 }
 \value{
 A tibble with columns \code{group} and \code{particle} (where the
-system has them), \code{time}, \code{variable}, one column per array
+system has them), \code{time}, \code{variable} (a factor, with levels in the
+order the model stores its state), one column per array
 dimension (\code{NA} for variables without that dimension) and \code{value}.
 }
 \description{

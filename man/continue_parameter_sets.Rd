@@ -9,8 +9,8 @@ continue_parameter_sets(
   times,
   obj = NULL,
   packer = NULL,
+  pars = NULL,
   fixed = NULL,
-  modify = NULL,
   n_particles = NULL,
   deterministic = NULL,
   n_draws = NULL,
@@ -35,11 +35,15 @@ created from. Not needed for output from \code{\link[=run_parameter_sets]{run_pa
 \item{packer}{For a fit, the packer the likelihood was created with.
 Not needed for output from \code{\link[=run_parameter_sets]{run_parameter_sets()}}.}
 
+\item{pars}{Optional new parameter sets to use from this point on,
+in place of those in \code{samples}, in any form accepted by
+\code{\link[=run_parameter_sets]{run_parameter_sets()}}. There must be one for each sample, in the
+same order, as each still continues from its own state. A data
+frame from \code{\link[posterior:draws_df]{posterior::as_draws_df()}} with some columns changed is
+the simplest way to do this.}
+
 \item{fixed}{Optional named list of parameters to hold constant from
 this point on, replacing fixed values used so far.}
-
-\item{modify}{Optional function applied to each parameter list from
-this point on, in addition to any applied so far.}
 
 \item{n_particles}{Number of particles to run for each parameter
 set, each starting from that set's final state. If the samples

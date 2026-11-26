@@ -10,11 +10,10 @@ run_parameter_sets(
   times,
   packer = NULL,
   fixed = NULL,
-  modify = NULL,
   n_particles = 1,
-  deterministic = FALSE,
+  deterministic = NULL,
   n_draws = NULL,
-  time_start = 0,
+  time_start = NULL,
   save_trajectories = TRUE,
   dt = NULL,
   ode_control = NULL,
@@ -24,13 +23,18 @@ run_parameter_sets(
 }
 \arguments{
 \item{generator}{An odin2 model generator, as returned by
-\code{\link[odin2:odin]{odin2::odin()}}.}
+\code{\link[odin2:odin]{odin2::odin()}}. When rerunning a fitted model, pass the filter or
+unfilter used for the fit instead: the model, its time step and
+start time, and whether it is deterministic are then taken from
+the fit rather than given again.}
 
 \item{pars}{The parameter sets. One of:
 \itemize{
 \item a \code{monty_samples} object (requires \code{packer}); chains are kept
 \item a data frame with one row per parameter set and one numeric
-column per parameter
+column per parameter. Columns \code{.chain}, \code{.iteration} and \code{.draw},
+as produced by \code{\link[posterior:draws_df]{posterior::as_draws_df()}}, are not treated as
+parameters, and \code{.chain} is used to keep chains
 \item a list of parameter lists; without a \code{packer}, elements that are
 the same in every set are treated as fixed
 \item a matrix with one column per parameter set (requires \code{packer})
@@ -48,28 +52,30 @@ all parameter sets, for example \code{list(N = 1000)}. These are added
 to every set, and replace any fixed values in \code{packer}. They may
 not name a parameter that varies in \code{pars}.}
 
-\item{modify}{Optional function applied to each parameter list before
-the model is run, for example to scale a parameter for a
-counterfactual: \code{function(p) { p$beta <- p$beta * 0.8; p }}.}
-
 \item{n_particles}{Number of particles (stochastic realisations) to
 run for each parameter set.}
 
 \item{deterministic}{Logical, indicating that a stochastic model
 should be run deterministically, replacing random draws with their
 expectations. Has no effect on ODE models, which are always
-deterministic.}
+deterministic. By default \code{FALSE}, or as the fit if \code{generator} is
+a filter or unfilter.}
 
 \item{n_draws}{Optional number of parameter sets to select at random
 from \code{pars}. If given, the result has a single chain.}
 
-\item{time_start}{The time at which the model starts.}
+\item{time_start}{The time at which the model starts. By default
+0, or as the fit if \code{generator} is a filter or unfilter.}
 
 \item{save_trajectories}{Either \code{TRUE}, to save all state variables,
 or a character vector of variable names to save.}
 
-\item{dt, ode_control, seed, n_threads}{Passed to
-\code{\link[dust2:dust_system_create]{dust2::dust_system_create()}}.}
+\item{dt, ode_control}{Time step for discrete-time models and
+control for ODE models, passed to \code{\link[dust2:dust_system_create]{dust2::dust_system_create()}}.
+By default those of the fit if \code{generator} is a filter or
+unfilter, and otherwise the model's defaults.}
+
+\item{seed, n_threads}{Passed to \code{\link[dust2:dust_system_create]{dust2::dust_system_create()}}.}
 }
 \value{
 An object of class \code{monty_samples}, with elements:
@@ -108,5 +114,8 @@ every set must produce a model with the same state (for example, the
 same array sizes).
 
 To compare scenarios, call this once per scenario and combine the
-tidied results with \code{dplyr::bind_rows(..., .id = "scenario")}.
+tidied results with \code{dplyr::bind_rows(..., .id = "scenario")}. For a
+counterfactual based on a fit, convert the samples to a data frame
+with \code{\link[posterior:draws_df]{posterior::as_draws_df()}}, change the parameters there, and
+pass the data frame as \code{pars}.
 }

@@ -18,7 +18,8 @@
 #' @inheritParams tidy_simulation
 #'
 #' @return A tibble with columns `.chain`, `.iteration`, `.draw`,
-#'   `parameter`, index columns for array parameters, `group` for
+#'   `parameter` (a factor, with levels in the order of the samples),
+#'   index columns for array parameters, `group` for
 #'   grouped parameters, and `value`.
 #'
 #' @export

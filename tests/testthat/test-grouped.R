@@ -18,7 +18,7 @@ test_that("tidy parameters from a grouped fit", {
   expect_true(all(is.na(r$group)))
 
   res <- tidy_pars(s, vars = "beta")
-  expect_equal(unique(res$parameter), "beta")
+  expect_equal(levels(res$parameter), "beta")
   expect_setequal(res$group, c("north", "south"))
 })
 

@@ -18,30 +18,46 @@ test_that("continuing a deterministic run matches running straight through", {
                second$observations$state[, , 1], tolerance = 1e-6)
 })
 
-test_that("continuing remembers fixed parameters and modifications", {
+test_that("continuing remembers fixed parameters", {
   grid <- data.frame(beta = c(0.2, 0.5))
-  half <- function(p) {
-    p$beta <- p$beta / 2
-    p
-  }
   first <- run_parameter_sets(model("sir"), grid, 0:5, deterministic = TRUE,
-                              fixed = list(gamma = 0.3), modify = half,
-                              dt = 0.25)
+                              fixed = list(gamma = 0.3), dt = 0.25)
   full <- run_parameter_sets(model("sir"), grid, 0:10, deterministic = TRUE,
-                             fixed = list(gamma = 0.3), modify = half,
-                             dt = 0.25)
+                             fixed = list(gamma = 0.3), dt = 0.25)
   second <- continue_parameter_sets(first, 5:10, save_trajectories = "I")
   expect_equal(second$observations$trajectories[1, , , ],
                full$observations$trajectories[2, 6:11, , ])
+})
 
-  ## changing things from this point on
-  stop <- continue_parameter_sets(first, 5:10, fixed = list(gamma = 0),
-                                  modify = function(p) {
-                                    p$beta <- 0
-                                    p
-                                  })
+test_that("can change parameters when continuing", {
+  grid <- data.frame(beta = c(0.2, 0.5))
+  first <- run_parameter_sets(model("sir"), grid, 0:5, deterministic = TRUE,
+                              fixed = list(gamma = 0.3), dt = 0.25)
+  stop <- continue_parameter_sets(first, 5:10, pars = data.frame(beta = c(0, 0)),
+                                  fixed = list(gamma = 0))
   traj <- stop$observations$trajectories
   expect_equal(traj[2, 6, , 1], traj[2, 1, , 1])
+  expect_equal(traj[2, 1, , 1], first$observations$state[2, , 1])
+  expect_equal(stop$pars["beta", , 1], c(0, 0))
+  expect_error(
+    continue_parameter_sets(first, 5:10, pars = data.frame(beta = 0)),
+    "one parameter set for each sample")
+
+  skip_if_not_installed("posterior")
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  s <- fit$samples
+  pars <- posterior::as_draws_df(s)
+  pars$beta <- 0
+  res <- continue_parameter_sets(s, 10:15, obj = fit$filter,
+                                 packer = sir_packer(), pars = pars)
+  expect_equal(dim(res$pars), dim(s$pars))
+  expect_true(all(res$pars["beta", , ] == 0))
+  expect_equal(res$pars["gamma", , ], s$pars["gamma", , ])
+  ## no new infections, each draw starting from its own state
+  expect_true(all(res$observations$trajectories[4, -1, , ] == 0))
+  expect_equal(res$observations$trajectories[1, 6, , ],
+               s$observations$state[1, , ])
 })
 
 test_that("continuing survives thinning", {

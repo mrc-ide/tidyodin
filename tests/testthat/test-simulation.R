@@ -60,7 +60,7 @@ test_that("tidy state, index_state and vars", {
   idx <- unlist(dust2::dust_unpack_index(sys)[c("I", "incidence")])
   y <- dust2::dust_system_simulate(sys, t, index_state = idx)
   res <- tidy_simulation(y, sys, t, index_state = idx, vars = "incidence")
-  expect_equal(unique(res$variable), "incidence")
+  expect_equal(levels(res$variable), "incidence")
   expect_equal(res$value, c(y[2, , ]))
   expect_error(tidy_simulation(y, sys, t), "Unexpected array dimensions")
   expect_error(tidy_simulation(y, NULL, t), "dust_system")

@@ -63,7 +63,10 @@ melt_state <- function(x, names, trailing, vars = NULL, dims = NULL,
   }
   ret <- ret[intersect(column_order, names(ret))]
 
-  ret[[name_col]] <- rep(info$variable, times = n_rest)
+  ## A factor with levels in the model's own order, so that facets and
+  ## legends follow it rather than the alphabet
+  ret[[name_col]] <- rep(factor(info$variable, unique(info$variable)),
+                         times = n_rest)
   index <- index_columns(info, dims, labels, call)
   for (nm in names(index)) {
     ret[[nm]] <- rep(index[[nm]], times = n_rest)

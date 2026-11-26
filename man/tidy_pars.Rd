@@ -25,7 +25,8 @@ become factors. Use the name \code{group} to label parameter groups.}
 }
 \value{
 A tibble with columns \code{.chain}, \code{.iteration}, \code{.draw},
-\code{parameter}, index columns for array parameters, \code{group} for
+\code{parameter} (a factor, with levels in the order of the samples),
+index columns for array parameters, \code{group} for
 grouped parameters, and \code{value}.
 }
 \description{

@@ -34,7 +34,8 @@
 #'   become factors. Use the name `group` to label parameter groups.
 #'
 #' @return A tibble with columns `group` and `particle` (where the
-#'   system has them), `time`, `variable`, one column per array
+#'   system has them), `time`, `variable` (a factor, with levels in the
+#'   order the model stores its state), one column per array
 #'   dimension (`NA` for variables without that dimension) and `value`.
 #'
 #' @export

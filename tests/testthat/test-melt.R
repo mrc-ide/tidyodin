@@ -51,3 +51,14 @@ test_that("melt validates dimensions", {
   expect_error(melt_state(array(0, c(2, 3)), c("a", "b"), list(time = 1:4)),
                "Unexpected array dimensions")
 })
+
+test_that("variables are factors in the order of the state", {
+  x <- array(0, c(4, 2))
+  res <- melt_state(x, c("S", "I[1]", "I[2]", "A"), list(time = 1:2))
+  expect_s3_class(res$variable, "factor")
+  expect_false(is.ordered(res$variable))
+  expect_equal(levels(res$variable), c("S", "I", "A"))
+  res <- melt_state(x, c("S", "I[1]", "I[2]", "A"), list(time = 1:2),
+                    vars = c("A", "S"))
+  expect_equal(levels(res$variable), c("S", "A"))
+})
