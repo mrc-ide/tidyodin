@@ -263,3 +263,17 @@ test_that("invalid parameter sets give helpful errors", {
                        save_trajectories = FALSE),
     "must be `TRUE` or a character vector")
 })
+
+test_that("chains are only kept when samples divide evenly into them", {
+  expect_equal(chains_from_draws(NULL), 1)
+  expect_equal(chains_from_draws(c(1, 1, 1)), 1)
+  expect_equal(chains_from_draws(c(1, 1, 2, 2, 3, 3)), 3)
+  ## uneven, or not in order, so there is no chain structure to keep
+  expect_equal(chains_from_draws(c(1, 2, 2)), 1)
+  expect_equal(chains_from_draws(c(1, 2, 1, 2)), 1)
+  expect_equal(chains_from_draws(c(2, 2, 3, 3)), 1)
+
+  pars <- data.frame(chain = c(1, 2, 2), beta = c(0.2, 0.3, 0.4))
+  res <- run_parameter_sets(model("ode"), pars, 0:2)
+  expect_equal(dim(res$pars), c(1, 3, 1))
+})
