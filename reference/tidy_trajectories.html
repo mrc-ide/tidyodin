@@ -152,6 +152,11 @@ become factors. Use the name <code>group</code> to label parameter groups.</p></
 variables were saved or at what times, so the filter used to create
 the likelihood is needed as <code>obj</code>. Output from <code><a href="run_parameter_sets.html">run_parameter_sets()</a></code>
 carries this information with it and <code>obj</code> can be omitted.</p>
+<p>A filter only knows the names of its state variables once it has
+been run. If the samples were saved and the filter has been created
+again in a new session, run it once with
+<code><a href="https://mrc-ide.github.io/dust2/reference/dust_likelihood_run.html" class="external-link">dust2::dust_likelihood_run()</a></code>, using any valid parameters, before
+passing it here.</p>
 <p>Trajectories can be very large (variables x times x draws). Use
 <code>vars</code> and <code>n_samples</code> to reduce them before reshaping.</p>
     </div>
