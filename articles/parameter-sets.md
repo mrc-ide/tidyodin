@@ -228,13 +228,11 @@ vcv <- matrix(c(0.051, 0.040, 0.040, 0.035), 2, 2)
 sampler <- monty_sampler_random_walk(vcv)
 samples <- monty_sample(likelihood + prior, sampler, 3000,
                         initial = c(0.7, 0.45), n_chains = 3)
-#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA:  1m
-#> ⠄⠀ Sampling [▂▁▁] ■■■                              |   7% ETA: 13s
-#> ⢂⠀ Sampling [▇▁▁] ■■■■■■■■■■                       |  29% ETA:  9s
-#> ⡂⠀ Sampling [█▄▁] ■■■■■■■■■■■■■■■■                 |  51% ETA:  7s
-#> ⠅⠀ Sampling [██▂] ■■■■■■■■■■■■■■■■■■■■■■■          |  74% ETA:  4s
-#> ⢃⠀ Sampling [██▇] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   |  96% ETA:  1s
-#> ✔ Sampled 9000 steps across 3 chains in 13.4s
+#> ⡀⠀ Sampling [▁▁▁] ■                                |   0% ETA: 44s
+#> ⠄⠀ Sampling [▃▁▁] ■■■■■                            |  14% ETA:  8s
+#> ⢂⠀ Sampling [█▃▁] ■■■■■■■■■■■■■■■                  |  46% ETA:  5s
+#> ⡂⠀ Sampling [██▃] ■■■■■■■■■■■■■■■■■■■■■■■■■        |  80% ETA:  2s
+#> ✔ Sampled 9000 steps across 3 chains in 9s
 #> 
 samples <- monty_samples_thin(samples, burnin = 1000, thinning_factor = 5)
 
