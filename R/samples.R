@@ -133,14 +133,17 @@ tidy_observation <- function(samples, what, obj, times, save_trajectories,
   if (is.null(x)) {
     cli::cli_abort(
       c("These samples do not contain any {what}",
-        i = "Create the likelihood with {.code {observation_arg[[what]]}} in {.fn dust2::dust_likelihood_monty}"),
+        i = paste("Create the likelihood with",
+                  "{.code {observation_arg[[what]]}} in",
+                  "{.fn dust2::dust_likelihood_monty}")),
       call = call)
   }
   n <- dim(samples$density)
   d <- dim(x)
   if (!is.numeric(x) || length(d) < 3 || !identical(utils::tail(d, 2), n)) {
     cli::cli_abort(
-      "Can't tidy {.code observations${what}}: expected an array whose last two dimensions are samples and chains",
+      paste("Can't tidy {.code observations${what}}: expected an array",
+            "whose last two dimensions are samples and chains"),
       call = call)
   }
 
@@ -236,7 +239,8 @@ check_samples <- function(samples, call = rlang::caller_env()) {
 #' @export
 summarise_trajectories <- function(data, interval = 0.95) {
   if (!is.data.frame(data) || !("value" %in% names(data))) {
-    cli::cli_abort("{.arg data} must be a data frame with a {.val value} column")
+    cli::cli_abort(
+      "{.arg data} must be a data frame with a {.val value} column")
   }
   over <- c("value", "chain", "iteration", "sample", "particle")
   by <- setdiff(names(data), over)

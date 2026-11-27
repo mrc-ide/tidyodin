@@ -15,10 +15,13 @@ melt_state <- function(x, names, trailing, vars = NULL, dims = NULL,
   expected <- c(length(names), lengths(trailing, use.names = FALSE))
   actual <- dim(x) %||% length(x)
   if (!identical(as.integer(actual), as.integer(expected))) {
+    str_expected <- paste(expected, collapse = " x ")
+    str_names <- paste(c(name_col, names(trailing)), collapse = " x ")
+    str_actual <- paste(actual, collapse = " x ")
     cli::cli_abort(
       c("Unexpected array dimensions",
-        x = "Expected {.val {paste(expected, collapse = ' x ')}} ({paste(c(name_col, names(trailing)), collapse = ' x ')})",
-        x = "Found {.val {paste(actual, collapse = ' x ')}}"),
+        x = "Expected {.val {str_expected}} ({str_names})",
+        x = "Found {.val {str_actual}}"),
       call = call)
   }
 
@@ -128,7 +131,8 @@ index_columns <- function(info, dims, labels, call) {
     }
     if (length(dims) < rank_max) {
       cli::cli_abort(
-        "{.arg dims} names {length(dims)} dimension{?s} but some variables have {rank_max}",
+        paste("{.arg dims} names {length(dims)} dimension{?s} but some",
+              "variables have {rank_max}"),
         call = call)
     }
     dims <- lapply(rank[rank > 0], function(r) dims[seq_len(r)])
@@ -140,7 +144,8 @@ index_columns <- function(info, dims, labels, call) {
     nms <- dims[[v]] %||% paste0("index", seq_len(r))
     if (length(nms) != r) {
       cli::cli_abort(
-        "{.arg dims} for {.val {v}} has length {length(nms)} but {.val {v}} has {r} dimension{?s}",
+        paste("{.arg dims} for {.val {v}} has length {length(nms)} but",
+              "{.val {v}} has {r} dimension{?s}"),
         call = call)
     }
     rows <- info$variable == v
@@ -168,7 +173,8 @@ apply_labels <- function(index, labels, name, call) {
   n <- max(index, na.rm = TRUE)
   if (length(labels) < n) {
     cli::cli_abort(
-      "{.arg labels} for {.val {name}} has {length(labels)} element{?s} but {n} are needed",
+      paste("{.arg labels} for {.val {name}} has {length(labels)}",
+            "element{?s} but {n} are needed"),
       call = call)
   }
   factor(labels[index], levels = labels)

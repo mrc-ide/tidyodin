@@ -1,5 +1,11 @@
 # tidyodin
 
+<!-- badges: start -->
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![R-CMD-check](https://github.com/mrc-ide/tidyodin/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/mrc-ide/tidyodin/actions/workflows/R-CMD-check.yaml)
+[![codecov.io](https://codecov.io/github/mrc-ide/tidyodin/coverage.svg?branch=main)](https://codecov.io/github/mrc-ide/tidyodin?branch=main)
+<!-- badges: end -->
+
 Tidy output from [odin2](https://mrc-ide.github.io/odin2), [dust2](https://mrc-ide.github.io/dust2) and [monty](https://mrc-ide.github.io/monty), ready for ggplot2.
 
 dust2 and monty return arrays whose layout depends on how the model was run. This package converts them to long-format tibbles with one row per value.

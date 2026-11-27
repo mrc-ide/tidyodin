@@ -67,10 +67,11 @@ test_that("lists of parameter sets can hold arrays and fixed elements", {
   expect_true(all(c("age", "vax") %in% names(tidy)))
 
   packer <- monty::monty_packer(array = list(x = 2))
-  p <- prepare_pars(list(list(x = c(1, 2), k = "a"), list(x = c(3, 4), k = "a")),
-                    NULL)
+  p <- prepare_pars(
+    list(list(x = c(1, 2), k = "a"), list(x = c(3, 4), k = "a")), NULL)
   expect_equal(p$packer$names(), packer$names())
-  expect_equal(p$matrix, matrix(1:4, 2, dimnames = list(c("x[1]", "x[2]"), NULL)))
+  expect_equal(p$matrix,
+               matrix(1:4, 2, dimnames = list(c("x[1]", "x[2]"), NULL)))
   expect_equal(p$fixed, list(k = "a"))
 
   expect_error(prepare_pars(list(list(a = 1), list(b = 1)), NULL),

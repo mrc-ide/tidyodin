@@ -258,13 +258,17 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
     if (is.null(state)) {
       cli::cli_abort(
         c("These samples do not contain a final state to continue from",
-          i = "Create the likelihood with {.code save_state = TRUE} in {.fn dust2::dust_likelihood_monty}, or pass {.arg state} and {.arg time}"))
+          i = paste("Create the likelihood with {.code save_state = TRUE}",
+                    "in {.fn dust2::dust_likelihood_monty}, or pass",
+                    "{.arg state} and {.arg time}")))
     }
   }
   if (n_particles_prev > 1) {
     if (!is.null(n_particles) && n_particles != n_particles_prev) {
       cli::cli_abort(
-        "These samples hold {n_particles_prev} particles per parameter set, so {.arg n_particles} can't be changed to {n_particles}")
+        paste("These samples hold {n_particles_prev} particles per",
+              "parameter set, so {.arg n_particles} can't be changed to",
+              "{n_particles}"))
     }
     n_particles <- n_particles_prev
   }
@@ -297,7 +301,10 @@ simulate_sets <- function(spec, m, shape, times, state, time_start,
   n_groups <- ncol(m)
 
   pars_list <- lapply(seq_len(n_groups), function(i) {
-    p <- if (is.null(spec$packer)) list() else spec$packer$unpack(unname(m[, i]))
+    p <- list()
+    if (!is.null(spec$packer)) {
+      p <- spec$packer$unpack(unname(m[, i]))
+    }
     utils::modifyList(p, as.list(spec$fixed))
   })
 
@@ -316,10 +323,12 @@ simulate_sets <- function(spec, m, shape, times, state, time_start,
     n_each <- if (state_has_particles) n_particles else 1
     expected <- n_state * n_each * n_total
     if (length(state) != expected || NROW(state) != n_state) {
+      found <- paste(dim(state) %||% length(state), collapse = " x ")
       cli::cli_abort(
         c("Unexpected size for the state to continue from",
-          x = "Expected {n_state} state variable{?s} for each of {n_total} parameter set{?s}",
-          x = "Found {.val {paste(dim(state) %||% length(state), collapse = ' x ')}}"),
+          x = paste("Expected {n_state} state variable{?s} for each of",
+                    "{n_total} parameter set{?s}"),
+          x = "Found {.val {found}}"),
         call = call)
     }
     ## state x particle x group, or state x group repeated over particles
@@ -444,7 +453,8 @@ prepare_pars <- function(pars, packer, call = rlang::caller_env()) {
     }
   } else {
     cli::cli_abort(
-      "{.arg pars} must be a {.cls monty_samples} object, a data frame, a list of parameter lists or a matrix",
+      paste("{.arg pars} must be a {.cls monty_samples} object, a data",
+            "frame, a list of parameter lists or a matrix"),
       call = call)
   }
 
@@ -506,7 +516,8 @@ check_packer <- function(packer, m, call = rlang::caller_env()) {
   nms <- packer$names()
   if (nrow(m) != length(nms)) {
     cli::cli_abort(
-      "Expected {length(nms)} parameter{?s} to match {.arg packer}, but found {nrow(m)}",
+      paste("Expected {length(nms)} parameter{?s} to match {.arg packer},",
+            "but found {nrow(m)}"),
       call = call)
   }
   if (!is.null(rownames(m)) && !identical(rownames(m), nms)) {
@@ -531,7 +542,8 @@ check_fixed <- function(fixed, m, call = rlang::caller_env()) {
   clash <- intersect(nms, parse_names(rownames(m) %||% character())$variable)
   if (length(clash) > 0) {
     cli::cli_abort(
-      c("{.arg fixed} names parameters that vary in {.arg pars}: {.val {clash}}",
+      c(paste("{.arg fixed} names parameters that vary in {.arg pars}:",
+              "{.val {clash}}"),
         i = "Remove them from one or the other"),
       call = call)
   }

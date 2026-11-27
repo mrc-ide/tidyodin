@@ -33,7 +33,8 @@ test_that("can change parameters when continuing", {
   grid <- data.frame(beta = c(0.2, 0.5))
   first <- run_parameter_sets(model("sir"), grid, 0:5, deterministic = TRUE,
                               fixed = list(gamma = 0.3), dt = 0.25)
-  stop <- continue_parameter_sets(first, 5:10, pars = data.frame(beta = c(0, 0)),
+  stop <- continue_parameter_sets(first, 5:10,
+                                  pars = data.frame(beta = c(0, 0)),
                                   fixed = list(gamma = 0))
   traj <- stop$observations$trajectories
   expect_equal(traj[2, 6, , 1], traj[2, 1, , 1])
