@@ -190,3 +190,23 @@ test_that("the packer is checked when continuing a fit", {
                             packer = monty::monty_packer("beta")),
     "Expected 1 parameter to match `packer`, but found 2")
 })
+
+test_that("a previous run can be continued from a given state and time", {
+  grid <- data.frame(beta = c(0.2, 0.5))
+  first <- run_parameter_sets(model("sir"), grid, 0:5, n_particles = 4,
+                              dt = 0.25, seed = 1)
+  ## one state per parameter set, replacing the four particles each held
+  state <- matrix(c(900, 50, 50, 0, 800, 100, 100, 0), 4)
+  res <- continue_parameter_sets(first, 3:6, state = state, time = 3)
+  expect_equal(dim(res$observations$trajectories), c(4, 4, 2, 1))
+  expect_equal(res$observations$trajectories[, 1, , 1], state)
+  expect_equal(range(tidy_trajectories(res)$time), c(3, 6))
+
+  ## and the number of particles is then free to choose
+  res <- continue_parameter_sets(first, 3:6, state = state, time = 3,
+                                 n_particles = 3)
+  expect_equal(dim(res$observations$trajectories), c(4, 3, 4, 2, 1))
+  for (i in 1:3) {
+    expect_equal(res$observations$trajectories[, i, 1, , 1], state)
+  }
+})

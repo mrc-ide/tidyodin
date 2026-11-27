@@ -235,7 +235,12 @@ continue_parameter_sets <- function(samples, times, obj = NULL,
     time <- time %||% utils::tail(meta$times, 1)
     save_trajectories <- save_trajectories %||%
       unique(parse_names(meta$names_trajectories)$variable)
-    n_particles_prev <- if (is.null(state)) meta$n_particles else 1
+    ## A state given explicitly has one column per parameter set, so the
+    ## particles of the previous run no longer apply
+    n_particles_prev <- 1
+    if (is.null(state)) {
+      n_particles_prev <- meta$n_particles
+    }
   }
 
   if (!is.null(pars)) {
