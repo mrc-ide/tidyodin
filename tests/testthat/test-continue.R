@@ -176,3 +176,17 @@ test_that("continue gives helpful errors", {
                             packer = grouped$packer),
     "grouped fit is not supported")
 })
+
+test_that("the packer is checked when continuing a fit", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  grouped <- monty::monty_packer_grouped(c("a", "b"), c("beta", "gamma"))
+  expect_error(
+    continue_parameter_sets(fit$samples, 10:12, obj = fit$filter,
+                            packer = grouped),
+    "Grouped packers are not supported")
+  expect_error(
+    continue_parameter_sets(fit$samples, 10:12, obj = fit$filter,
+                            packer = monty::monty_packer("beta")),
+    "Expected 1 parameter to match `packer`, but found 2")
+})

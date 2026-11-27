@@ -89,6 +89,12 @@ variables were saved or at what times, so the filter used to create
 the likelihood is needed as \code{obj}. Output from \code{\link[=run_parameter_sets]{run_parameter_sets()}}
 carries this information with it and \code{obj} can be omitted.
 
+A filter only knows the names of its state variables once it has
+been run. If the samples were saved and the filter has been created
+again in a new session, run it once with
+\code{\link[dust2:dust_likelihood_run]{dust2::dust_likelihood_run()}}, using any valid parameters, before
+passing it here.
+
 Trajectories can be very large (variables x times x draws). Use
 \code{vars} and \code{n_samples} to reduce them before reshaping.
 }

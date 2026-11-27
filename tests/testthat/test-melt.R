@@ -62,3 +62,12 @@ test_that("variables are factors in the order of the state", {
                     vars = c("A", "S"))
   expect_equal(levels(res$variable), c("S", "A"))
 })
+
+test_that("dims must be a character vector or a named list", {
+  x <- array(0, c(2, 2))
+  expect_error(melt_state(x, c("a[1]", "a[2]"), list(time = 1:2), dims = 1),
+               "must be an unnamed character vector or a named list")
+  expect_error(
+    melt_state(x, c("a[1]", "a[2]"), list(time = 1:2), dims = c(a = "age")),
+    "must be an unnamed character vector or a named list")
+})

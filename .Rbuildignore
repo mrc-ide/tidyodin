@@ -9,3 +9,4 @@
 ^scripts$
 ^\.lintr$
 ^cobertura\.xml$
+^codecov\.yml$

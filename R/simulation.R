@@ -107,9 +107,9 @@ tidy_filter <- function(obj, select_random_particle = FALSE,
   if (!inherits(obj, "dust_likelihood")) {
     cli::cli_abort("{.arg obj} must be a {.cls dust_likelihood}")
   }
+  names <- likelihood_state_names(obj)
   y <- dust2::dust_likelihood_last_trajectories(
     obj, select_random_particle = select_random_particle)
-  names <- likelihood_state_names(obj)
   if (!is.null(index_state)) {
     names <- names[index_state]
   }
@@ -124,8 +124,11 @@ likelihood_state_names <- function(obj, call = rlang::caller_env()) {
   packer <- obj$packer_state
   if (is.null(packer)) {
     cli::cli_abort(
-      c("The likelihood has not been run yet, so its state is not known",
-        i = "Run it with {.fn dust2::dust_likelihood_run} first"),
+      c("The filter has not been run yet, so its state is not known",
+        i = paste("A newly created filter learns the names of its state",
+                  "variables the first time it is run"),
+        i = paste("Run it once with {.fn dust2::dust_likelihood_run},",
+                  "using any valid parameters, then try again")),
       call = call)
   }
   packer$names()

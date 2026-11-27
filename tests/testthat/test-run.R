@@ -236,3 +236,30 @@ test_that("sample columns from this package are not treated as parameters", {
   expect_named(tidy_trajectories(res),
                c("chain", "iteration", "sample", "time", "variable", "value"))
 })
+
+test_that("invalid parameter sets give helpful errors", {
+  packer <- sir_packer()
+  expect_error(
+    run_parameter_sets(model("sir"), data.frame(beta = numeric()), 0:3),
+    "has no rows")
+  expect_error(
+    run_parameter_sets(model("sir"), data.frame(beta = 0.2), 0:3,
+                       packer = packer),
+    "Columns missing from `pars`: \"gamma\"")
+  expect_error(
+    run_parameter_sets(model("sir"), matrix(0.2, 3, 2), 0:3, packer = packer),
+    "Expected 2 parameters to match `packer`, but found 3")
+  expect_error(
+    run_parameter_sets(model("sir"), matrix(0.2, 2, 2), 0:3,
+                       packer = list()),
+    "must be a <monty_packer>")
+  grouped <- monty::monty_packer_grouped(c("a", "b"), c("beta", "gamma"))
+  expect_error(
+    run_parameter_sets(model("sir"), matrix(0.2, 4, 2), 0:3,
+                       packer = grouped),
+    "Grouped packers are not supported")
+  expect_error(
+    run_parameter_sets(model("sir"), data.frame(beta = 0.2), 0:3,
+                       save_trajectories = FALSE),
+    "must be `TRUE` or a character vector")
+})

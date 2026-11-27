@@ -5,3 +5,5 @@
 tests/testthat/_problems/
 inst/doc
 docs
+tests/testthat/testthat-problems.rds
+cobertura.xml

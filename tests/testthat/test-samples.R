@@ -118,3 +118,49 @@ test_that("summarise trajectories", {
                                    quantile(101:200, 0.25))))
   expect_error(summarise_trajectories(1), "data frame")
 })
+
+test_that("a system can stand in for the filter", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  s <- fit$samples
+  sys <- dust2::dust_system_create(model("sir"), list(), dt = 0.25)
+
+  ## a system knows the state but not the times of the data
+  expect_error(tidy_trajectories(s, sys), "`times` must be provided")
+  res <- tidy_trajectories(s, sys, times = 1:10)
+  expect_equal(res, tidy_trajectories(s, fit$filter))
+  r <- res[res$variable == "I" & res$sample == 61, ]
+  expect_equal(r$value, s$observations$trajectories[2, , 1, 3])
+
+  expect_equal(tidy_state(s, sys), tidy_state(s, fit$filter))
+  expect_error(
+    tidy_trajectories(s, sys, times = 1:10,
+                      save_trajectories = c("I", "incidence")),
+    "Unexpected array dimensions")
+})
+
+test_that("a filter must have been run before it can describe samples", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  fresh <- dust2::dust_filter_create(model("sir"), time_start = 0,
+                                     data = sir_data(), n_particles = 20,
+                                     dt = 0.25)
+  expect_error(tidy_trajectories(fit$samples, fresh),
+               "has not been run yet")
+  dust2::dust_likelihood_run(fresh, list())
+  expect_equal(tidy_trajectories(fit$samples, fresh),
+               tidy_trajectories(fit$samples, fit$filter))
+})
+
+test_that("observations that are not sample by chain arrays are rejected", {
+  fit <- sir_fit(save_trajectories = TRUE, save_state = TRUE,
+                 save_snapshots = c(4, 8))
+  s <- fit$samples
+  ## as produced by a custom observer, or by one whose output varies
+  s$observations$trajectories <- list(1, 2)
+  expect_error(tidy_trajectories(s, fit$filter), "Can't tidy")
+  s$observations$trajectories <- array(0, c(4, 10, 7, 3))
+  expect_error(tidy_trajectories(s, fit$filter), "Can't tidy")
+  s$observations$trajectories <- matrix(0, 30, 3)
+  expect_error(tidy_trajectories(s, fit$filter), "Can't tidy")
+})

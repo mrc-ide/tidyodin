@@ -69,6 +69,12 @@ tidy_density <- function(samples) {
 #' the likelihood is needed as `obj`. Output from [run_parameter_sets()]
 #' carries this information with it and `obj` can be omitted.
 #'
+#' A filter only knows the names of its state variables once it has
+#' been run. If the samples were saved and the filter has been created
+#' again in a new session, run it once with
+#' [dust2::dust_likelihood_run()], using any valid parameters, before
+#' passing it here.
+#'
 #' Trajectories can be very large (variables x times x draws). Use
 #' `vars` and `n_samples` to reduce them before reshaping.
 #'

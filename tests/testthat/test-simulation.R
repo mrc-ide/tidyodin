@@ -70,7 +70,7 @@ test_that("tidy filter trajectories", {
   filter <- dust2::dust_filter_create(model("sir"), time_start = 0,
                                       data = sir_data(), n_particles = 20,
                                       dt = 0.25, seed = 1)
-  expect_error(tidy_filter(filter), "not yet been run")
+  expect_error(tidy_filter(filter), "has not been run yet")
   dust2::dust_likelihood_run(filter, list(), save_trajectories = TRUE)
   h <- dust2::dust_likelihood_last_trajectories(filter)
   res <- tidy_filter(filter)
@@ -102,4 +102,27 @@ test_that("tidy grouped filter and unfilter", {
   dust2::dust_likelihood_run(unfilter, list(), save_trajectories = TRUE)
   res <- tidy_filter(unfilter)
   expect_named(res, c("time", "variable", "value"))
+})
+
+test_that("tidy filter trajectories saved for a subset of states", {
+  filter <- dust2::dust_filter_create(model("sir"), time_start = 0,
+                                      data = sir_data(), n_particles = 20,
+                                      dt = 0.25, seed = 1)
+  index <- c(2L, 4L)
+  dust2::dust_likelihood_run(filter, list(), save_trajectories = TRUE,
+                             index_state = index)
+  h <- dust2::dust_likelihood_last_trajectories(filter)
+  expect_equal(dim(h), c(2, 20, 10))
+
+  res <- tidy_filter(filter, index_state = index)
+  expect_equal(levels(res$variable), c("I", "incidence"))
+  expect_equal(nrow(res), length(h))
+  r <- res[res$variable == "I" & res$particle == 5, ]
+  expect_equal(r$value, h[1, 5, ])
+  r <- res[res$variable == "incidence" & res$time == 7, ]
+  expect_equal(r$value, h[2, , 7])
+
+  ## without the index the array does not match the filter's state
+  expect_error(tidy_filter(filter), "Unexpected array dimensions")
+  expect_error(tidy_filter(NULL), "must be a")
 })
